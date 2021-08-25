@@ -81,7 +81,7 @@ class BootLoader():
 
     def reset(self):
         """Reset connection and boot program."""
-        self.serial.target_reset()
+        self._connect()
 
     def _connect(self):
         """Connect to target.
@@ -92,7 +92,7 @@ class BootLoader():
             IOError: No response from target on `port`.
         """
         ###self.serial.timeout = 1
-        self.reset()
+        self.serial.target_reset()
 
         for _ in range(3):
             time.sleep(.6)
@@ -120,26 +120,29 @@ class BootLoader():
     def read_data(self, address, size):
         """Read a block of bytes of any size from memory."""
         num_blocks = size // 128
-
-        self.serial.write(('R%x,%x#' % (address, 128 * num_blocks)).encode())
-        self.serial.write(b'C')
-
         data = b''
-        for framecount in range(1, num_blocks + 1):
-            frame = self.serial.read(1 + 1 + 1 + 128 + 2)
-            (soh, blk, blkComp, chunk, crc) = struct.unpack(
-                '<BBB128s2s', frame)
 
-            assert soh == 0x01
-            assert blk == framecount
-            assert blkComp == 0xff - blk
-            assert crc16citt(chunk) == crc
+        if num_blocks > 0:
+            self.serial.write(('R%x,%x#' % (address, 128 * num_blocks)).encode())
+            self.serial.write(b'C')
 
-            data += chunk
+            for framecount in range(1, num_blocks + 1):
+                frame = self.serial.read(1 + 1 + 1 + 128 + 2)
+                (soh, blk, blkComp, chunk, crc) = struct.unpack(
+                    '<BBB128s2s', frame)
+
+                assert soh == 0x01
+                assert blk == framecount
+                assert blkComp == 0xff - blk
+                assert crc16citt(chunk) == crc
+
+                data += chunk
+                self.serial.write(b'\x06')
+
+            eot = self.serial.read(1) 
+            if not eot == b'\x04':  # EOT - End of Transmission
+                print('eot', eot)
             self.serial.write(b'\x06')
-
-        assert self.serial.read(1) == b'\x04'  # EOT - End of Transmission
-        self.serial.write(b'\x06')
 
         for offset in range(128 * num_blocks, size):
             data += bu8(self.read_byte(address + offset))
@@ -167,24 +170,24 @@ class BootLoader():
         self.serial.write(('W%x,%x#' % (address, value)).encode())
 
     def write_data(self, address, data):
-        """Write a block of data to memory."""
-        self.serial.write(('S%x,#' % address).encode())
-        assert self.serial.read(1) == b'C'
-
         num_blocks = len(data) // 128
-        for i in range(0, num_blocks):
-            time.sleep(0.05)
-            framecount = i + 1  # framecount starts at 1
-            start = 128 * i
-            blob = data[start:start + 128]
-            self.serial.write(b'\x01' + bu8(framecount) +
-                              bu8(255 - framecount) + blob + crc16citt(blob))
+        if num_blocks > 0:
+            self.serial.write(('S%x,#' % address).encode())
+            assert self.serial.read(1) == b'C'
+
+            for i in range(0, num_blocks):
+                time.sleep(0.05)
+                framecount = i + 1  # framecount starts at 1
+                start = 128 * i
+                blob = data[start:start + 128]
+                self.serial.write(b'\x01' + bu8(framecount) +
+                                  bu8(255 - framecount) + blob + crc16citt(blob))
+                ack = self.serial.read(1)
+                assert ack == b'\x06'
+
+            self.serial.write(b'\x04')
             ack = self.serial.read(1)
             assert ack == b'\x06'
-
-        self.serial.write(b'\x04')
-        ack = self.serial.read(1)
-        assert ack == b'\x06'
 
         num_rest = len(data) % 128
         rest_bytes = data[-num_rest:]
