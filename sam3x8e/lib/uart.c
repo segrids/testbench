@@ -64,8 +64,7 @@ void uart_configure(Uart* p_uart, uint32_t mck, uint32_t baud_rate) {
  *
  * Receive one character. 
  */
-int uart_receive_uint8(void* pointer, uint8_t *p) {
-	Uart *p_uart = (Uart *)pointer;
+int uart_receive_uint8(Uart* p_uart, uint8_t *p) {
 	while ((p_uart->UART_SR & 0x01) == 0) { }
 	*p = (uint8_t)p_uart->UART_RHR;
 	return 0;
@@ -75,9 +74,9 @@ int uart_receive_uint8(void* pointer, uint8_t *p) {
  *
  * Send one character. 
  */
-int uart_send_uint8(void* pointer, uint8_t byte) {
-	Uart *p_uart = (Uart *)pointer;
+int uart_send_uint8(Uart* p_uart, uint8_t byte) {
 	while ((p_uart->UART_SR & 0x02) == 0) { }
+	p_uart->UART_THR = byte;
 	return 0;
 }
 

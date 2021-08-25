@@ -1,17 +1,20 @@
-objects := scb.o uart.o apdu.o interface.o wdt.o rtt.o pmc.o pio.o eefc.o tc.o ivt.o \
+objects := scb.o uart.o apdu.o wdt.o rtt.o pmc.o pio.o eefc.o tc.o ivt.o \
 	systick.o rstc.o nvic.o twi.o spi.o hdq.o types.o
 
-cond_objects := startup.o
-
-libflash.a : libflash.a($(objects) $(cond_objects:.o=.flash.o))
+# object files depending on compiler switch
+cond_objects := startup.o interface.o
 
 libram.a : libram.a($(objects) $(cond_objects))
 
+# for libflash use startup.flash.o instead of startup.o:
+libflash.a : libflash.a($(objects) $(cond_objects:.o=.flash.o))
+
+# object files to be build with FLASH precompiler switch
 %.flash.o : %.c
 	$(CC) $(CFLAGS) -DFLASH -c $^ -o $@
 
 %.o : %.s
-	arm-none-eabi-gcc $(CFLAGS) -c $^ -o $@
+	$(CC) $(CFLAGS) -c $^ -o $@
 
 %.s : %.c
 	$(CC) $(CFLAGS) -S $^ -o $@

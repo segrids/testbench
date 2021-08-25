@@ -24,10 +24,13 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 */
  
 #include "interface.h"
+
 #include "uart.h"
+#ifdef FLASH
 #include "twi.h"
 #include "spi.h"
 #include "hdq.h"
+#endif
 
 /* We use the Arduino Due typically as a slave with the PC as the master.
  * It might furtheremore act as a master (e.g. when used as an adapter)
@@ -38,7 +41,10 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  * peripheral hardware (UART, I2C, SPI, HDQ) and the APDU handler.
  */
 
+#ifdef FLASH
 master_t master_interface;
+#endif
+
 slave_t slave_interface;
 
 /* slave_init()
@@ -59,6 +65,7 @@ int slave_init(uint8_t protocol, uint8_t slave_address, uint8_t config){
 		slave_interface.send_uint8 = (int (*)(void *, uint8_t)) &uart_send_uint8;
 		slave_interface.receive_uint8 = (int (*)(void *, uint8_t *)) &uart_receive_uint8;
 		slave_interface.close = (void (*)(void *)) &uart_close;
+#ifdef FLASH
 	} else if (protocol == 'I') {
 		// I2C slave interface on Arduino Due is always TWI0
 		twi_enable(TWI0);
@@ -80,6 +87,7 @@ int slave_init(uint8_t protocol, uint8_t slave_address, uint8_t config){
 		slave_interface.send_uint8 = (int (*)(void *, uint8_t)) &hdq_send_uint8;
 		slave_interface.receive_uint8 = (int (*)(void *, uint8_t *)) &hdq_receive_uint8;
 		slave_interface.close = (void (*)(void *)) &hdq_close;
+#endif
 	} else {
 		return -1; // TODO: Error code
 	}
@@ -181,6 +189,7 @@ void slave_close(void){
 }
 
 
+#ifdef FLASH
 
 /* master_init()
  *
@@ -247,3 +256,4 @@ void master_close(void){
 	master_interface.close(master_interface.pointer);
 }
 
+#endif
