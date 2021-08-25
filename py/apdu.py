@@ -86,8 +86,9 @@ class Apdu():
             response body or None if `read_response` is false.
         """
         cmd = cla + ins + bu16(len(data)) + data + bu16(res_len)
+        #print("sending APDU", cmd) # uncomment for debugging
         self.serial.write(cmd)
-        sleep(0.0001) ### added for adapter class
+        sleep(0.001) ### added for adapter class
         if read_response and res_len is not None:
             res = self.serial.read(res_len + 2)
 
