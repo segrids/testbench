@@ -7,7 +7,7 @@ export OBJCOPY = $(PREFIX)-objcopy
 
 LIBDIR := $(shell pwd)/lib
 
-override CFLAGS += -nostdlib -mthumb # -ffunction-sections
+override CFLAGS += -nostdlib -mthumb -ffunction-sections
 override CFLAGS += -Wall -Wno-main -O0 -gdwarf
 # override CFLAGS += -fdata-sections
 
