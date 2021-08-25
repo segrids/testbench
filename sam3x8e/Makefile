@@ -12,15 +12,16 @@ override CFLAGS += -mcpu=cortex-m3
 
 override CFLAGS += -nostdlib -mthumb
 override CFLAGS += -Wall -Wno-main -O0 -gdwarf
-# override CFLAGS += -fdata-sections -ffunction-sections
+#override CFLAGS += -fdata-sections -ffunction-sections
 
 override LDFLAGS += -nostdlib --entry=ivt -L$(LIBDIR) -gdwarf -Wl,--gc-sections
 
 export CFLAGS
 export LDFLAGS
 
-objects := swd.o blake2s.o utils.o loader.o debugger.o adapter.o tester.o
-cond_objects := main.o cinterrupts.o asminterrupts.o
+objects := swd.o blake2s.o utils.o loader.o 
+cond_objects := main.o cinterrupts.o asminterrupts.o 
+optional_objects := debugger.o adapter.o tester.o
 
 %.o : %.S
 	$(CC) $(CFLAGS) -c $^ -o $@
@@ -47,11 +48,9 @@ lib-% :
 libram :
 	cd ./lib && $(MAKE) libram.a
 
-flash.elf : $(objects) $(cond_objects) libflash
+flash.elf : $(objects) $(cond_objects) $(optional_objects) libflash
 	$(CC) $(LDFLAGS) -T./ld/linker-script-flash.ld $(filter %.o, $^) -lflash -o $@
 
-ram.elf : $(objects) $(cond_objects) libram
-	$(CC) $(LDFLAGS) -T./ld/linker-script-ram.ld $(filter %.o, $^) -lram -o $@
 
 bootloader.elf : $(objects) $(cond_objects:%.o=%.bootloader.o) libram
 	$(CC) $(LDFLAGS) -Os -T./ld/linker-script-ram.ld $(filter %.o, $^) -lram -o $@
@@ -84,7 +83,6 @@ flash : flash.bin erase
 .PHONY: clean
 clean :
 	-$(RM) $(modules:%=modules/%.o) $(modules:%=modules/%.elf) \
-		$(modules:%=modules/%.bin) $(objects) $(cond_objects) \
-		$(cond_objects:%.o=%.bootloader.o) flash.elf ram.elf flash.bin ram.bin \
-		bootloader.elf bootloader.bin
+		$(modules:%=modules/%.bin) $(objects) $(cond_objects) $(optional_objects)\
+		$(cond_objects:%.o=%.bootloader.o) flash.elf bootloader.bin
 	$(MAKE) -C lib clean
