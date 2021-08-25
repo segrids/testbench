@@ -81,9 +81,9 @@ class BootLoader():
 
     def reset(self):
         """Reset connection and boot program."""
-        self._connect()
+        self._connect(target_reset=True)
 
-    def _connect(self):
+    def _connect(self, target_reset=True):
         """Connect to target.
 
         Raises an exception if no connection is established after 3 tries.
@@ -91,8 +91,8 @@ class BootLoader():
         Raises:
             IOError: No response from target on `port`.
         """
-        ###self.serial.timeout = 1
-        self.serial.target_reset()
+        if target_reset:
+            self.serial.target_reset()
 
         for _ in range(3):
             time.sleep(.6)
@@ -207,10 +207,8 @@ class BootLoader():
                 32-word aligned.
         """
         assert address & 0x3f == 0
-        sram = address >= 0x20000000
-        word = (address & 0x3fffff80) | (sram << 29)
-        word_bytes = struct.pack('<I', word)
-        self.write_word(0xE000ED08, ub32(word_bytes))
+        self.write_word(0xE000ED08, address)
+        assert self.read_word(0xE000ED08) == address
 
     def load(self, address, path, go=True):
         """Load binary from disk into RAM and optionally start execution.
@@ -231,3 +229,58 @@ class BootLoader():
         self.write_data(address, data)
         if go:
             self.go(address)
+
+"""
+test_bootloader()
+
+Test the methods of the BootLoader class.
+
+Required that an Arduino Due is connected to port.
+"""
+def test_bootloader(port='/dev/ttyACM0', ramimage='sam3x8e/images/bootloader.bin', erased=True, go=False):
+    print("Test bootloader") 
+    bl = bootLoader(port)
+    version = bl.version()
+    assert version[0:3] == b'v1.'
+    assert version[-2:] == b'\n\r'
+    print("SAM_BA boot version:" , version[:-2])
+    # test read methods 
+    assert bl.read_word(0) == 0x20001000 # top of stack
+    assert bl.read_word(4) == 0x10004d   # points to reset_handler in ROM
+    bl.read_word(0x10000) == bl.read_word(0x0) # address 0 points to ROM
+    bl.read_word(0x12000) == bl.read_word(0x10000) # ROM address space limited to 8k
+    for data_len in [1,4,10,100,1000]:
+        if erased:
+            assert bl.read_data(0x80000,data_len) == b'\xff'*data_len
+        else:
+            assert bl.read_data(0x80000,data_len) == bl.read_data(0x80000,data_len)
+    for byte in range(4): # Least significant byte first test
+        assert (bl.read_word(0x20001000) >> (8*byte)) & 0xff == bl.read_byte(0x20001000 + byte)
+    # test write methods
+    bl.write_byte(0x20002003, 0xaf) 
+    bl.write_byte(0x20002002, 0xfe) 
+    bl.write_byte(0x20002001, 0xca) 
+    bl.write_byte(0x20002000, 0xfe) 
+    assert bl.read_word(0x20002000) == 0xaffecafe
+    data = b'text test text test text'
+    bl.write_data(0x20002000, data)
+    assert bl.read_data(0x20002000, len(data)) == data
+    bl.write_data(0x20002000, data*10)
+    assert bl.read_data(0x20002000, len(data)*10) == data*10
+    # test reset, _connect and go methods
+    bl._connect(target_reset=False)
+    assert bl.version() == version
+    for pointer in [0,1000,0x10000,0x80000,0x20000000,0x20002000]:
+        bl.set_VTOR(0) # method contains assertions
+    bl.go(0x0)
+    bl._connect(target_reset = False)
+    assert bl.version() == version
+    # test load method
+    if ramimage != '':
+        bl.load(0x20071000, ramimage, go=False)
+        with open(ramimage,'rb') as fd:
+            data = fd.read()
+        assert bl.read_data(0x20071000, len(data)) == data
+    if go:
+        bl.go(0x20071000)
+        return bl.serial # return serial handler
