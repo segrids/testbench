@@ -97,11 +97,12 @@ class Adapter():
 test_adapter()
 
 Required a programmed sam3x8e device at the adapter_port
-connected to a second progarmmed target connected via interface.
+connected to a second progarmmed target connected via `interface`.
 
 The interface select jumper must be be set properly
 (see sam3x8e/adapter.c)
 
+If interface == "SPI", connect arduiono due pin A10 of the target (i.e. the SPI slave) to GND.
 """
 def test_adapter(adapter_port="/dev/ttyACM2", interface="I2C"):
     from .uart import Serial

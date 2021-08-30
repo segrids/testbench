@@ -71,7 +71,7 @@ Author: SEGRIDS GmbH <www.segrids.com>
  *	25      | A | MISO      | Due SPI     | SPI0 master
  *	26      | A | MOSI      | Due SPI     | SPI0 master
  *	27      | A | SCLK      | Due SPI     | SPI0 master
- *	28 (C29)|PIO| nSS       | Due Pin 10  | SPI0 master
+ *	28 (C29)|PIO| nSS       | Due Pin 10  | SPI0 master: connect to use board as SPI slave
  *	29 (C26)|PIO| don't use | Due Pin  4  | use C26 instead for Debugger SWD data
  *  PIOB
  *      12      | A | TWD1      | Due Pin 20  | TWI1 master
@@ -134,7 +134,7 @@ void init_pio(void) {
  * -------------------- | ---------------
  * no jumper            | UART
  * bridge A5 and A6     | TWI
- * bridge A6 and A7     | SPI
+ * bridge A6 and A7     | SPI (for SPI slave connect A10 to GND)
  *
  * Mapping between Arduino Due and sam3x8e pins:
  *

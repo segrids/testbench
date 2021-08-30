@@ -46,6 +46,8 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 /* spi_enable()
  *
  * Configure the SPI interface either in master (1) or slave (0) mode.
+ *
+ * NOTE: If the Arduino Due shall be an SPI slave, connect A10 to GND.
  */
 void spi_enable(Spi* p_spi, int mode){
 	/* enable SPI0 peripheral clock */
