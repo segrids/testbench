@@ -26,13 +26,13 @@ Author: Frank Schuhmacher
 from sys import stdout
 import time
 
-from . import uart
+from ..hexen import *
+from .. import uart
 from ..apdu import Apdu
 from .programmer import Programmer
-from .hexen import *
 
 
-def Tester(port):
+def tester(port):
     from .uart import Serial
     serial = Serial(port)
     return Tester(serial)
