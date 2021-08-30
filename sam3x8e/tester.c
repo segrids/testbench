@@ -32,7 +32,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "tc.h"
 #include "utils.h"
 #include "apdu.h"
-#include "interface.h"
+#include "slave.h"
 
 /* handle_test()
  *
@@ -46,12 +46,6 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  * ----- | --------- | ----------- | ---
  * 'B'   |   0       |   b' '      | 0
  * 
- * 
- * 'E' Echo: Echo bytestring.  Implemented as a check that UART communication is working properly.
- * 
- * INS   |   LC            |     DATA    | LE
- * ----- | --------------- | ----------- | ---------------
- * 'E'   | len(bytestring) | bytestring  | len(bytestring)
  * 
  */
 int handle_test(void) {
@@ -121,9 +115,6 @@ int handle_test(void) {
 				status = 0x6706;
 			}
 		}
-
-	} else if (apdu.ins == 'E') {
-		slave_send_data(apdu.data, apdu.le);
 
 	} else if (apdu.ins == 'S') { /* set Arduino Due pins 
 		 * permitted data values: 7, 9

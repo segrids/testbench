@@ -23,7 +23,7 @@ SOFTWARE.
 Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 */
  
-#include "interface.h"
+#include "slave.h"
 
 #include "uart.h"
 #ifdef FLASH
@@ -40,10 +40,6 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  * we implement master and slave interfaces as an abstraction layer between
  * peripheral hardware (UART, I2C, SPI, HDQ) and the APDU handler.
  */
-
-#ifdef FLASH
-master_t master_interface;
-#endif
 
 slave_t slave_interface;
 
@@ -189,71 +185,3 @@ void slave_close(void){
 }
 
 
-#ifdef FLASH
-
-/* master_init()
- *
- * Intialize master_interface.
- *
- * Called if requested by apdu.cla == 'A', apdu.ins == 'O'.
- * apdu.data encodes the args.
- *
- * args: protocol in {'U': UART, 'S': SPI, 'I': I2C, 'H': HDQ}
- *       config: protocol specific 8-bit encoding of interface configuration 
- */
-int master_init(uint8_t protocol, uint8_t config){
-	int ret;
-	if (protocol == 'I') {
-		// I2C master interface on Arduino Due is always TWI0
-		twi_enable(TWI1);
-		ret = twi_set_master_mode(TWI1, config);
-		master_interface.pointer = (void *)TWI1;
-		master_interface.send_data = (int (*)(void *, uint8_t, uint8_t *, int)) &twi_master_send_data;
-		master_interface.receive_data = (int (*)(void *, uint8_t, uint8_t *, int)) &twi_master_receive_data;
-		master_interface.close = (void (*)(void *)) &twi_close;
-	} else if (protocol == 'S') {
-		// SPI master interface on Arduino Due is SPI0 (since only one SPI interface, slave as well)
-		spi_enable(SPI0, 1); // 1=MASTER MODE
-		spi_flush_receiver(SPI0);
-		ret = 0;
-		master_interface.pointer = (void *)SPI0;
-		master_interface.send_data = (int (*)(void *, uint8_t, uint8_t *, int)) &spi_master_send_data;
-		master_interface.receive_data = (int (*)(void *, uint8_t, uint8_t *, int)) &spi_master_receive_data;
-		master_interface.close = (void (*)(void *)) &spi_close;
-	} else if (protocol == 'H') {
-		ret = 0;
-		hdq_init(HDQ0, 0);
-		master_interface.pointer = (void *)&hdq; // equivalent to malloc(sizeof(Hdq)) ???
-		// HDQ interface (Arduino Due Pins 14 and 15)
-		master_interface.send_data = (int (*)(void *, uint8_t, uint8_t *, int)) &hdq_master_send_data;
-		master_interface.receive_data = (int (*)(void *, uint8_t, uint8_t *, int)) &hdq_master_receive_data;
-		master_interface.close = (void (*)(void *)) &hdq_close;
-		
-	} else {
-		return -1; // TODO: Error code
-	}
-	return ret;
-}
-
-/* master_send_data()
- *
- * Abstraction of periphal interface specific send data function.
- */
-int master_send_data(uint8_t slave_address, uint8_t *buffer, int len){
-	return master_interface.send_data(master_interface.pointer, slave_address, buffer, len);
-}
-
-/* master_receive_data()
- *
- * Abstraction of periphal interface specific receive data function.
- */
-int master_receive_data(uint8_t slave_address, uint8_t *buffer, int len){
-	return master_interface.receive_data(master_interface.pointer, slave_address, buffer, len);
-}
-
-/* master_close() */
-void master_close(void){
-	master_interface.close(master_interface.pointer);
-}
-
-#endif

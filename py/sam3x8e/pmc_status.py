@@ -87,7 +87,7 @@ pmc_status()
 Read registers of the sam3x8e to analyse the status of the Power Management Control PMC.
 
 arg:
-    t = an instance of RamLoader, Loader, Tester, Sam3x8e, or Debugger
+    t = an instance of Samba, Loader, Tester, Programmer, or Debugger
 """
 def pmc_status(t):
     ret = ''

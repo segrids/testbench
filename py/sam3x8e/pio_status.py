@@ -116,7 +116,7 @@ pio_status()
 check the pin assignments of the sam3x8e MCu
 
 arg:
-    t = an instance of RamLoader, Loader, Tester, Sam3x8e, or Debugger
+    t = an instance of Samba, Loader, Tester, Programmer, or Debugger
 """
 
 def pio_status(t):

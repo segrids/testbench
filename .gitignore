@@ -1,0 +1,5 @@
+*.o
+*.bin
+*.elf
+*__pycache__*
+

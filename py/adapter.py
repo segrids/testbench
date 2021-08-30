@@ -93,4 +93,21 @@ class Adapter():
         assert status == 0x9000
 
 
+"""
+test_adapter()
+
+Required a programmed sam3x8e device at the adapter_port
+connected to a second progarmmed target connected via interface.
+
+The interface select jumper must be be set properly
+(see sam3x8e/adapter.c)
+
+"""
+def test_adapter(adapter_port="/dev/ttyACM2", interface="I2C"):
+    from .uart import Serial
+    from .loader import Loader
+    s = Serial(adapter_port)
+    a = Adapter(s, interface=interface)
+    t = Loader(a)
+    assert t.echo(b'abc') == b'abc'
 

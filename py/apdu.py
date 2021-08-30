@@ -69,7 +69,7 @@ class Apdu():
     def clear_buffer(self):
         self.serial.read_all()
 
-    def sendreceive(self, ins, data=b'', res_len=0, cla=b'B', read_response=True):
+    def sendreceive(self, ins, data=b'', res_len=0, cla=b'L', read_response=True):
         """Issue an APDU command.
 
         Args:
@@ -86,7 +86,7 @@ class Apdu():
             response body or None if `read_response` is false.
         """
         cmd = cla + ins + bu16(len(data)) + data + bu16(res_len)
-        #print("sending APDU", cmd) # uncomment for debugging
+        # print("sending APDU", cmd) # uncomment for debugging
         self.serial.write(cmd)
         sleep(0.001) ### added for adapter class
         if read_response and res_len is not None:

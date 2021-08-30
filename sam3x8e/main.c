@@ -32,7 +32,7 @@ Author: SEGRIDS GmbH <www.segrids.com>
 #include "utils.h"
 
 #include "apdu.h"
-#include "interface.h"
+#include "slave.h"
 
 #ifndef BOOTLOADER
 #include "adapter.h"
@@ -133,8 +133,8 @@ void init_pio(void) {
  * Jumper configuration | Slave interface
  * -------------------- | ---------------
  * no jumper            | UART
+ * bridge A5 and A6     | TWI
  * bridge A6 and A7     | SPI
- * bridge A5 and A7     | TWI
  *
  * Mapping between Arduino Due and sam3x8e pins:
  *
@@ -145,23 +145,28 @@ void init_pio(void) {
  * A7          | PIOA.2
  *
  * */
+
+
 int select_slave(void) {
-	// apply internal pull-up to PIOA.2 (Due A7) and PIOA.4
+	// apply internal pull-up to PIOA.2 (Due A7) and PIOA.4 (Due A5)
 	pio_pullup_enable(PIOA, 5<<2);
-	// set PIOA.3 = low
+	// set PIOA.3 (Due A6) = low
 	pio_clear_output_pins(PIOA, 1<<3);  // 
-	// if PIOA.2 is low, select 'S' (SPI)
-	// else if PIOA.4 is low, select 'I' (I2C / TWI)
+	// if PIOA.2 (Due A7) is low, select 'S' (SPI)
+	// else if PIOA.4 (Due A5) is low, select 'I' (I2C / TWI)
 	// else select 'U' (UART)
 	if (((pio_read_input_pins(PIOA) >> 2) & 5) == 0) {
 		return -1;
-	} else if (((pio_read_input_pins(PIOA) >> 2) & 1) == 0) {
+	}
+#ifndef BOOTLOADER
+	if (((pio_read_input_pins(PIOA) >> 2) & 1) == 0) {
 		return slave_init('S', 0, 0);
 	} else if (((pio_read_input_pins(PIOA) >> 4) & 1) == 0) {
 		return slave_init('I', 0x11, 0);
-	} else {
-		return slave_init('U', 0, 0);
 	}
+#endif
+
+	return slave_init('U', 0, 0);
 }
 
 /* handle_apdu()
@@ -183,7 +188,7 @@ int handle_apdu(void) {
 	} else if (apdu.cla == 'T') {
 		return handle_test();
 #endif
-	} else if (apdu.cla == 'B') {
+	} else if (apdu.cla == 'L') {
 		return handle_loader();
 	} else {
 	        perror((void *)handle_apdu, "Unknown APDU class", apdu.cla);

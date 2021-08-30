@@ -26,7 +26,7 @@ Author: David Kuehnemann
 #include "debugger.h"
 #include "pio.h"
 #include "swd.h"
-#include "interface.h"
+#include "slave.h"
 #include "apdu.h"
 
 /*

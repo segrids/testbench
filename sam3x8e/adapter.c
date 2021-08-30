@@ -26,7 +26,8 @@ Author: SEGRIDS GmbH <www.segrids.com>
 #include "adapter.h"
 #include "pio.h"
 #include "rtt.h"
-#include "interface.h"
+#include "slave.h"
+#include "master.h"
 #include "apdu.h"
 
 /* handle_adapter()

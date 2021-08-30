@@ -148,98 +148,10 @@ class Loader():
         """
         self.apdu.sendreceive(b'G', bu32(address), read_response=wait)
 
-
-"""
-class Tester():
-
-Extend methods of Loader class by a few ad-hoc tests.
-"""
-class Tester(Loader):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def blink(self):
-        """Toggle pin B27 repeatedly."""
-        _, status = self.apdu.sendreceive(b'B', cla=b'T')
-        return status
-
     def echo(self, data):
         """Send test data that ought to be echoed back."""
-        res, status = self.apdu.sendreceive(b'E', data, len(data), cla=b'T')
+        res, status = self.apdu.sendreceive(b'E', data, len(data))
         assert status == 0x9000
 
         return res
-
-    def set_led(self, value):
-        _, status = self.apdu.sendreceive(b'l', bu8(value), cla=b'T')
-        assert status == 0x9000
-
-    def pc(self):
-        """Read the address of the uart_send_uint8 function.
-
-        Useful to detect if program is executing in flash or RAM.
-        """
-        res, status = self.apdu.sendreceive(b'W', b'', 4, cla=b'T')
-        assert status == 0x9000
-        return ub32(res)
-
-    ### Test SPI slave commands (Attention: MOSI to MOSI, MISO to MISO)
-    def spi_open(self):
-        res, status = self.apdu.sendreceive(cla=b'T', ins=b'o', res_len=0)
-        assert status == 0x9000
-
-    def spi_send(self, data):
-        res, status = self.apdu.sendreceive(cla=b'T', ins=b'w', data=data, res_len=0)
-        assert status == 0x9000
-
-    def spi_receive(self, length):
-        res, status = self.apdu.sendreceive(cla=b'T', ins=b'r', res_len=length)
-        assert status == 0x9000
-        return res
-
-    ### Test I2C slave commands
-    def i2c_open(self):
-        res, status = self.apdu.sendreceive(cla=b'T', ins=b'O', res_len=0)
-        assert status == 0x9000
-
-    def i2c_send(self, data):
-        res, status = self.apdu.sendreceive(cla=b'T', ins=b'W', data=data, res_len=0)
-        assert status == 0x9000
-
-    def i2c_receive(self, length):
-        res, status = self.apdu.sendreceive(cla=b'T', ins=b'R', res_len=length)
-        assert status == 0x9000
-        return res
-
-
-"""
-class Challenger():
-
-Extend methods of Tester class by authentication methods.
-"""
-class Challenger(Tester):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def read_id(self):
-        res, status = self.apdu.sendreceive(cla=b'R', ins=b'I', res_len=24)
-        assert status == 0x9000
-        return res
-
-    def response(self, challenge=b'affe'*4):
-        #if self.mcu == 'sam3x8e': # this target needs to be forced into a defined state
-        #    self.apdu.serial.reset()
-        #    time.sleep(0.1)
-        #    self.read_id()
-        #    time.sleep(0.1)
-        res, status = self.apdu.sendreceive(cla=b'R', ins=b'C', data=challenge, res_len=16)
-        assert status == 0x9000
-        return res
-
-
-
-
-
 

@@ -29,7 +29,7 @@ spi_status()
 Read registers of the sam3x8e to analyse the status of the SPI0 peripheral (ID=24).
 
 arg:
-    t = an instance of RamLoader, Loader, Tester, Sam3x8e, or Debugger
+    t = an instance of Samba, Loader, Tester, Programmer, or Debugger
 """
 def spi_status(t):
     # check if the following 4 pins are assigned to SPI0:

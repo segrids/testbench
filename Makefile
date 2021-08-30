@@ -26,6 +26,9 @@ bootloader : sam3x8e-bootloader.bin
 .PHONY: clean
 clean :
 	$(MAKE) -C sam3x8e clean
+	rm -rf py/__pycache__/
+	rm -rf py/sam3x8e/__pycache__/
+	rm -rf py/debug/__pycache__/
 
 .PHONY: test
 test : test-unit test-integration

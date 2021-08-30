@@ -1,8 +1,8 @@
 objects := scb.o uart.o apdu.o wdt.o rtt.o pmc.o pio.o eefc.o tc.o ivt.o \
-	systick.o rstc.o nvic.o twi.o spi.o hdq.o types.o
+	systick.o rstc.o nvic.o twi.o spi.o hdq.o types.o master.o
 
 # object files depending on compiler switch
-cond_objects := startup.o interface.o
+cond_objects := startup.o slave.o
 
 libram.a : libram.a($(objects) $(cond_objects))
 
@@ -21,5 +21,4 @@ libflash.a : libflash.a($(objects) $(cond_objects:.o=.flash.o))
 
 .PHONY: clean
 clean :
-	-$(RM) $(objects) $(cond_objects) $(cond_objects:.o=.flash.o) libflash.a \
-		libram.a
+	-$(RM) $(objects) $(cond_objects) $(cond_objects:.o=.flash.o) libram.a libflash.a

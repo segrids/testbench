@@ -30,8 +30,6 @@ SOFTWARE.
 #include "utils.h"
 #include "uart.h"
 
-#ifndef BOOTLOADER
-#endif
 
 /*
 A non maskable interrupt (NMI) can be signalled by a peripheral or triggered by software. This is the highest

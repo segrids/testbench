@@ -76,6 +76,7 @@ modules/%.s : modules/%.c
 erase :
 	stty 1200 -F /dev/$(PORT)
 
+# python3 flash.py --target=SAM3x8e --port=ttyACM2 sam3x8e/flash.bin
 .PHONY: flash
 flash : flash.bin erase
 	../flash.py --erase --port=$(PORT) --verify --reset --bootloader=bootloader.bin $<
@@ -84,5 +85,5 @@ flash : flash.bin erase
 clean :
 	-$(RM) $(modules:%=modules/%.o) $(modules:%=modules/%.elf) \
 		$(modules:%=modules/%.bin) $(objects) $(cond_objects) $(optional_objects)\
-		$(cond_objects:%.o=%.bootloader.o) flash.elf bootloader.bin
+		$(cond_objects:%.o=%.bootloader.o) flash.elf flash.bin bootloader.elf bootloader.bin
 	$(MAKE) -C lib clean

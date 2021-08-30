@@ -2,7 +2,6 @@
 #define APDU_H_
 
 #include "types.h"
-#include "interface.h"
 
 int apdu_receive(void);
 void apdu_loop(int (*handle)(void));

@@ -25,7 +25,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  
 #include "loader.h"
 #include "apdu.h"
-#include "interface.h"
+#include "slave.h"
 #include "eefc.h"
 #include "blake2s.h"
 
@@ -42,6 +42,13 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  *   INS   |   LC                 |     DATA                    | LE
  *   ----- | -------------------- | --------------------------- | ---
  *   'D'   |   4 +len(bytestring) |  bu32(address) + bytestring |  0
+ * 
+ *
+ * 'E' Echo: Echo bytestring.  Implemented as a check that UART communication is working properly.
+ * 
+ * INS   |   LC            |     DATA    | LE
+ * ----- | --------------- | ----------- | ---------------
+ * 'E'   | len(bytestring) | bytestring  | len(bytestring)
  * 
  * 
  * 'F' Erase Flash page and write page: Flash page of Flash plane whoose buffer has 
@@ -100,6 +107,9 @@ int handle_loader(void) {
 		for (int i = 0; i < apdu.lc - 4; i++) {
 			p[i] = data[i];
 		}
+
+	} else if (apdu.ins == 'E') {
+		slave_send_data(apdu.data, apdu.le);
 
 	} else if (apdu.ins == 'F' ) { // flash a page whoose buffer has formerly been writte with 'I' command
 		Eefc* p_eefc;

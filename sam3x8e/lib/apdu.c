@@ -25,8 +25,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  
 #include "apdu.h"
 
-#include "types.h"
-#include "interface.h"
+#include "slave.h"
 
 /*
  * APDU handler requiring the following APDU format:
