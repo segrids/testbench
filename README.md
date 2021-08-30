@@ -31,4 +31,5 @@ with a corresponding handler on the arduino due target via application protocol 
   - binutils-arm-none-eabi (2.31.1-12+11)
   - ipython3 (5.8.0-1)
   - python3-serial (3.4-4)
-  
+
+The application requires at least one arduino due board. The adapter application additionally requires any target with SPI, I2C, or HDQ interface. The debugger application requires any target with SWD interface.
