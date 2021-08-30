@@ -151,19 +151,20 @@ def program(port,
           plane=0, 
           boot_rom=False):
 
-    from . import samba
+    from .samba import erase as do_erase
+    from .samba import samba
     from ..blake2s import Blake2s
 
     if erase:
         print('Erasing...')
         stdout.flush()
-        samba.erase(port)
+        do_erase(port)
         print(' done.')
 
     print('Initializing connection...')
     stdout.flush()
     # connect to boot code
-    sb = samba.samba(port)
+    sb = samba(port)
     assert sb.read_word(0) == 0x20001000
     print(' done.')
 

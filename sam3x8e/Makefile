@@ -79,7 +79,7 @@ erase :
 # python3 flash.py --target=SAM3x8e --port=ttyACM2 sam3x8e/flash.bin
 .PHONY: flash
 flash : flash.bin erase
-	../flash.py --erase --port=$(PORT) --verify --reset --bootloader=bootloader.bin $<
+	python3 ../flash.py --erase --port=$(PORT) --verify --reset --bootloader=bootloader.bin $<
 
 .PHONY: clean
 clean :
