@@ -2,4 +2,4 @@
 *.bin
 *.elf
 *__pycache__*
-md/test.md
+*ttt
