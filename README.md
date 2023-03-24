@@ -3,7 +3,7 @@ Software for IC programming, testing, debugging and hacking using
 **python3**, **gcc** and the **arduino due**.
 
 ## Advantages
-- Test control from the python shell (ipyhon3 or jupyper-noteboook).
+- Test control from the python shell (ipyhon3 or jupyter-lab).
 - Debug control from the python shell with the arduino due as debug hardware.
 - Arduino Due as adapter for SPI, I2C, UART and HDQ.
 - MIT licensed SAM3x8e libraries.
