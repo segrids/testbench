@@ -5,14 +5,14 @@
 #include "tc.h"
 #include "pio.h"
 
-typedef struct {
+typedef struct hdq_t {
 	TcChannel * HDQ_TC;
 	Pio * HDQ_PIO;
 	int HDQ_PIN;
 	int HDQ_POUT;
 } Hdq;
 
-Hdq hdq;
+extern struct hdq_t hdq;
 #define HDQ0 &hdq
 
 int hdq_init(Hdq *p_hdq, int number);

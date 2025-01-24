@@ -27,6 +27,8 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "pio.h"
 #include "tc.h"
 
+struct hdq_t hdq;
+
 /* hdq_init()
  *
  * Initialize Arduino Due pins 14 and 15 for hdq.

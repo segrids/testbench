@@ -37,6 +37,7 @@ Author: SEGRIDS GmbH <www.segrids.com>
 #ifndef BOOTLOADER
 #include "adapter.h"
 #include "tester.h"
+#include "lihandler.h"
 #include "debugger.h"
 #endif
 
@@ -190,6 +191,8 @@ int handle_apdu(void) {
 #endif
 	} else if (apdu.cla == 'L') {
 		return handle_loader();
+	} else if (apdu.cla == 'I') {
+		return handle_li();
 	} else {
 	        perror((void *)handle_apdu, "Unknown APDU class", apdu.cla);
 		slave_send_uint16(0x6C00);

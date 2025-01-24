@@ -21,7 +21,7 @@ export LDFLAGS
 
 objects := swd.o blake2s.o utils.o loader.o 
 cond_objects := main.o cinterrupts.o asminterrupts.o 
-optional_objects := debugger.o adapter.o tester.o
+optional_objects := debugger.o adapter.o tester.o lihandler.o
 
 %.o : %.S
 	$(CC) $(CFLAGS) -c $^ -o $@

@@ -24,7 +24,7 @@ Author: Frank Schuhmacher
 """
 
 import sys, os
-from glob import glob
+#from glob import glob
 from time import sleep
 import serial
 

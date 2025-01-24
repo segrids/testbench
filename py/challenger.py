@@ -10,7 +10,7 @@ from .loader import Loader
 """
 class Challenger():
 
-Extend methods of Tester class by authentication methods.
+Extend methods of Loader class by authentication methods.
 """
 class Challenger(Loader):
 
