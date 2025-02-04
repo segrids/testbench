@@ -25,18 +25,17 @@ Author: Frank Schuhmacher
 
 from sys import exit, stdout
 import time
+import argparse
 
 from progress.bar import Bar
 
 from ..hexen import *
-from .. import uart
 from ..loader import Loader
-
+from .sam3xserial import Sam3xSerial
 
 
 def programmer(port):
-    from ..uart import Serial
-    s = Serial(port)
+    s = Sam3xSerial(port)
     return Programmer(s)
 
 """
@@ -180,7 +179,7 @@ def program(port,
     print('Connecting to bootloader...')
     stdout.flush()
     # connect to bootloader
-    assert isinstance(sb.serial, uart.Serial)
+    assert isinstance(sb.serial, Sam3xSerial)
     p = Programmer(sb.serial)
     time.sleep(0.01)
     print(' done.')
@@ -231,3 +230,6 @@ def test_programmer(port='/dev/ttyACM0', image='sam3x8e/images/flash.bin', ramim
     # test py.loader <--UART--> sam3x8e.bootloader.loader
     assert t.read_word(0x20002000)%256 == t.read_byte(0x20002000) 
     t.flash(path=image)
+
+
+	

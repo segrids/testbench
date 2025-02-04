@@ -29,7 +29,7 @@ import struct
 import time
 import serial
 
-from ..uart import Serial
+from .sam3xserial import Sam3xSerial
 from ..crc16 import crc16citt
 from ..hexen import *
 
@@ -41,7 +41,7 @@ def erase(port='/dev/ttyACM0'):
     s.close()
 
 def samba(port):
-    serial = Serial(port)
+    serial = Sam3xSerial(port)
     return Samba(serial)
 
 
@@ -62,7 +62,7 @@ class Samba():
         Raises an exception if no connection is established after 3 tries.
 
         Args:
-            serial_or_port: Either a Serial instance that is connected to the
+            serial_or_port: Either a Sam3xSerial instance that is connected to the
                 target or a string in which case a serial connection with a
                 baudrate of 115200 and a timeout period of 3 seconds on that
                 port is opened.

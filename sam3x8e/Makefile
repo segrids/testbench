@@ -1,4 +1,4 @@
-export PORT ?= ttyACM1
+export PORT ?= /dev/ttyACM0
 PREFIX ?= arm-none-eabi
 
 export AR = $(PREFIX)-ar
@@ -74,12 +74,12 @@ modules/%.s : modules/%.c
 
 .PHONY: erase
 erase :
-	stty 1200 -F /dev/$(PORT)
+	stty 1200 -F $(PORT)
 
-# python3 flash.py --target=SAM3x8e --port=ttyACM2 sam3x8e/flash.bin
+# python3 flash.py --port=ttyACM2 sam3x8e/flash.bin
 .PHONY: flash
 flash : flash.bin erase
-	python3 ../flash.py --erase --port=$(PORT) --verify --reset --bootloader=bootloader.bin $<
+	python3 flash.py --port=$(PORT) --erase --verify --reset --bootloader=bootloader.bin $<
 
 .PHONY: clean
 clean :

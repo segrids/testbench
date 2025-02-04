@@ -56,7 +56,7 @@ class Adapter():
         self.protocol = protocols[interface]
         self.slave_address = bu8(slave_address)
         self.config = bu8(config)
-        self.mcu = None # not neccessary since Adapter has mcu agnostic target_reset method (in contrast to rpcserial.Serial)
+        self.mcu = None # not neccessary since Adapter has mcu agnostic target_reset method
         self.open()
 
     def open(self):
@@ -105,9 +105,9 @@ The interface select jumper must be be set properly
 If interface == "SPI", connect arduiono due pin A10 of the target (i.e. the SPI slave) to GND.
 """
 def test_adapter(adapter_port="/dev/ttyACM2", interface="I2C"):
-    from .uart import Serial
+    from .sam3xserial import Sam3xSerial
     from .loader import Loader
-    s = Serial(adapter_port)
+    s = Sam3xSerial(adapter_port)
     a = Adapter(s, interface=interface)
     t = Loader(a)
     assert t.echo(b'abc') == b'abc'

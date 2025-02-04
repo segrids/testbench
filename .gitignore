@@ -4,3 +4,5 @@
 *.elf
 *__pycache__*
 *ttt
+.ipynb_checkpoints/
+py/argparsing.py

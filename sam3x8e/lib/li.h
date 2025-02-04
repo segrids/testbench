@@ -27,6 +27,6 @@ void li_add_shifted(uint32_t *c, int clen, uint32_t *a, int alen, int shift);
 void li_sub_shifted(uint32_t *c, int clen, uint32_t *a, int alen, int shift);
 void li_mod(uint32_t *a, int alen, uint32_t *n, int nlen);
 void li_mul(uint32_t *c, int clen, uint32_t *a, int alen, uint32_t *b, int blen);
-void modexp(int wordlen);
+void li_modexp(int wordlen);
 
 #endif

@@ -25,7 +25,6 @@ Author: Frank Schuhmacher
 
 from time import sleep
 from ..hexen import *
-from ..uart import *
 from ..adapter import *
 
 """

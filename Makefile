@@ -20,6 +20,10 @@ export LDFLAGS
 sam3x8e-% :
 	cd sam3x8e && $(MAKE) $(@:sam3x8e-%=%)
 
+.PHONY: ht32-%
+ht32-% :
+	cd ht32 && $(MAKE) $(@:ht32-%=%)
+
 .PHONY: bootloader
 bootloader : sam3x8e-bootloader.bin
 

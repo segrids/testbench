@@ -16,8 +16,8 @@ Example: Start from folder `~/pakete`
 """
 
 def litester(port="/dev/ttyACM0"):
-	from .uart import Serial
-	serial = Serial(port)
+	from .sam3x8a.sam3xserial import Sam3xSerial
+	serial = Sam3xSerial(port)
 	return Litester(serial)
 
 

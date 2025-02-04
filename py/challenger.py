@@ -3,7 +3,6 @@ All rights reserved
 """
 
 from .hexen import *
-from . import uart
 from .apdu import Apdu
 from .loader import Loader
 

@@ -32,19 +32,6 @@ class Timeout(Exception):
     pass
 
 """
-apdu()
-
-a wrapper for the Apdu class
-"""
-def apdu(port_or_slot, remote=False):
-    if remote:
-        serial = rpcserial.SerialClient()
-        serial.open(port_or_slot)
-    else:
-        serial = rpcserial.Serial(port_or_slot)
-    return Apdu(serial)
-
-"""
 class Apdu()
 
 Apdu package handler
