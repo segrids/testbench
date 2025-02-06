@@ -46,6 +46,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "i2c.h"
 #include "interface.h"
 
+
 int handle_apdu(void);
 int handle_responder(void);
 //int handle_swd(void);
@@ -85,6 +86,7 @@ void set_led(uint8_t value){
 		gpio_toggle_output_pins(GPIOC, 3 << 14);
 	}
 };
+
 
 
 void Reset_Handler(void){

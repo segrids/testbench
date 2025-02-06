@@ -3,7 +3,7 @@
 
 typedef unsigned char uint8_t;
 typedef unsigned short int uint16_t;
-typedef unsigned int uint32_t;
+typedef long unsigned int uint32_t;
 
 /* global variable to store error information */
 struct error_descr_t {

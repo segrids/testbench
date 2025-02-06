@@ -23,22 +23,27 @@ SECTIONS
         *(.rodata)
     } > flash
 
-	.module :
-	{
-		. = ALIGN(4);
-		. += 0x3c00;
-	} > ram
-
 	. = ALIGN(4);
-	_etext = .;
-    .data : AT (_etext)
+
+	/*_etext = .;*/
+    .data :
     {
 		. = ALIGN(4);
 		_srelocate = .;
 		*(.data);
 		. = ALIGN(4);
 		_erelocate = .;
-    } > ram
+    } > ram  AT> flash
+
+	_etext = LOADADDR(.data);
+
+
+
+	.module :
+	{
+		. = ALIGN(4);
+		. += 0x3c00;
+	} > flash
 
     /* .bss section which is used for uninitialized data */
     .bss (NOLOAD) :

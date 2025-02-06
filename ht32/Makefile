@@ -7,11 +7,17 @@ export CC = $(PREFIX)-gcc
 export OBJCOPY = $(PREFIX)-objcopy
 
 override CFLAGS += -mcpu=cortex-m0plus
-override CFLAGS += -nostdlib -mthumb
+# override CFLAGS += -nostdlib ### nur für libtinycrypto
+override CFLAGS += -mthumb
 override CFLAGS += -Wall -Wno-main -O0 -gdwarf
 # override CFLAGS += -fdata-sections -ffunction-sections
 
-override LDFLAGS += -nostdlib --entry=ivt -gdwarf
+TINYCRYPTOLIBDIR := $(shell pwd)/libtinycrypt
+override CFLAGS += -I$(TINYCRYPTOLIBDIR)/include/tinycrypt/
+override LDFLAGS += -L$(TINYCRYPTOLIBDIR)
+
+# override LDFLAGS += -nostdlib 
+override LDFLAGS += --entry=ivt -gdwarf
 
 export CFLAGS
 export LDFLAGS
@@ -25,7 +31,7 @@ objects := ivt.o ckcu.o usart.o apdu.o main.o gpio.o crc.o pdma.o i2c.o interfac
 	$(OBJCOPY) -O binary $< $@
 
 flash.elf : $(objects)
-	$(CC) $(LDFLAGS) -Tlinker-script.ld $(filter %.o, $^) -o $@
+	$(CC) $(LDFLAGS) -Tlinker-script.ld $(filter %.o, $^) -ltinycrypt -o $@
 
 #python3 flash.py --port=ttyUSB0 ht32/flash.bin
 .PHONY: flash

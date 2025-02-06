@@ -38,6 +38,7 @@ Author: SEGRIDS GmbH <www.segrids.com>
 #include "adapter.h"
 #include "tester.h"
 #include "lihandler.h"
+#include "crypthandler.h"
 #include "debugger.h"
 #endif
 
@@ -180,6 +181,8 @@ int handle_apdu(void) {
 #ifndef BOOTLOADER
 	} else if (apdu.cla == 'A') {
 		return handle_adapter();
+	} else if (apdu.cla == 'C') {
+		return handle_crypt();
 	} else if (apdu.cla == 'I') {
 		return handle_li();
 #ifdef RESPONDER

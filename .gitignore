@@ -1,8 +1,17 @@
 *.o
+*.org
 *.a
 *.bin
+*.bak
 *.elf
 *__pycache__*
 *ttt
 .ipynb_checkpoints/
 py/argparsing.py
+ht32/libtinycrypt
+sam3x8e/libtinycrypt
+pdf/Cortex-M0+.pdf
+pdf/HT32F52342-52_Datasheetv120.pdf
+pdf/HT32F52342-52_UserManualv130.pdf
+pdf/SAM3X.PDF
+

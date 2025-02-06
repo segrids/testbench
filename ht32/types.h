@@ -28,7 +28,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 
 typedef unsigned char uint8_t;
 typedef unsigned short int uint16_t;
-typedef unsigned int uint32_t;
+typedef long unsigned int uint32_t;
 
 // ATMEL definitions
 typedef volatile const uint32_t RoReg; /**< Read only 32-bit register (volatile const unsigned int) */

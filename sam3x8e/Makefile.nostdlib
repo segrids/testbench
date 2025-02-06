@@ -10,24 +10,18 @@ override CFLAGS += -I$(LIBDIR)
 
 override CFLAGS += -mcpu=cortex-m3
 
-#override CFLAGS += -nostdlib
-override CFLAGS += -Wall -Wno-main -O0 -gdwarf -mthumb
+override CFLAGS += -nostdlib -mthumb
+override CFLAGS += -Wall -Wno-main -O0 -gdwarf
 #override CFLAGS += -fdata-sections -ffunction-sections
 
-override LDFLAGS += --entry=ivt -L$(LIBDIR) -gdwarf -Wl,--gc-sections
-#override LDFLAGS += -nostdlib
-
-### tinycrypt requires stdlib
-TINYCRYPTOLIBDIR := $(shell pwd)/libtinycrypt
-override CFLAGS += -I$(TINYCRYPTOLIBDIR)/include/tinycrypt/
-override LDFLAGS += -L$(TINYCRYPTOLIBDIR)
+override LDFLAGS += -nostdlib --entry=ivt -L$(LIBDIR) -gdwarf -Wl,--gc-sections
 
 export CFLAGS
 export LDFLAGS
 
 objects := swd.o blake2s.o utils.o loader.o 
 cond_objects := main.o cinterrupts.o asminterrupts.o 
-optional_objects := debugger.o adapter.o tester.o lihandler.o crypthandler.o
+optional_objects := debugger.o adapter.o tester.o lihandler.o
 
 %.o : %.S
 	$(CC) $(CFLAGS) -c $^ -o $@
@@ -55,7 +49,7 @@ libram :
 	cd ./lib && $(MAKE) libram.a
 
 flash.elf : $(objects) $(cond_objects) $(optional_objects) libflash
-	$(CC) $(LDFLAGS) -T./ld/linker-script-flash.ld $(filter %.o, $^) -lflash -ltinycrypt -o $@
+	$(CC) $(LDFLAGS) -T./ld/linker-script-flash.ld $(filter %.o, $^) -lflash -o $@
 
 
 bootloader.elf : $(objects) $(cond_objects:%.o=%.bootloader.o) libram
