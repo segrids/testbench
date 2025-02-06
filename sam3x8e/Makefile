@@ -91,5 +91,5 @@ flash : flash.bin erase
 clean :
 	-$(RM) $(modules:%=modules/%.o) $(modules:%=modules/%.elf) \
 		$(modules:%=modules/%.bin) $(objects) $(cond_objects) $(optional_objects)\
-		$(cond_objects:%.o=%.bootloader.o) flash.elf flash.bin bootloader.elf bootloader.bin
+		$(cond_objects:%.o=%.bootloader.o) flash.elf bootloader.elf
 	$(MAKE) -C lib clean

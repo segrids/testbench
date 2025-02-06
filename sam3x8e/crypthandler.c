@@ -56,12 +56,12 @@ int test_1(void){
 	}
 	/*if (memcmp(expected.words, sched.words, sizeof(sched.words))) {
 		return 3;
-	}
+	}*/
 	for (int i=0; i<16; i++){
 		if (ciphertext[i] != expected_output[i]) {
 			return 5;
 		}
-	}*/
+	}
 	return 0;
 }
 
