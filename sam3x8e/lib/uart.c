@@ -31,9 +31,8 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  *
  * Flush the UART interface. 
  */
-int uart_flush(Uart* p_uart) {
+void uart_flush(Uart* p_uart) {
 	p_uart->UART_CR = 0x15c;
-	return 0;
 }
 
 /* uart_close()
@@ -64,20 +63,18 @@ void uart_configure(Uart* p_uart, uint32_t mck, uint32_t baud_rate) {
  *
  * Receive one character. 
  */
-int uart_receive_uint8(Uart* p_uart, uint8_t *p) {
+void uart_receive_uint8(Uart* p_uart, uint8_t *p) {
 	while ((p_uart->UART_SR & 0x01) == 0) { }
 	*p = (uint8_t)p_uart->UART_RHR;
-	return 0;
 }
 
 /* uart_send_uint8()
  *
  * Send one character. 
  */
-int uart_send_uint8(Uart* p_uart, uint8_t byte) {
+void uart_send_uint8(Uart* p_uart, uint8_t byte) {
 	while ((p_uart->UART_SR & 0x02) == 0) { }
 	p_uart->UART_THR = byte;
-	return 0;
 }
 
 

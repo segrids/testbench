@@ -96,34 +96,31 @@ int twi_set_master_mode(Twi* p_twi, uint8_t config){
  *
  * Slave receive method for TWI.
  */
-int twi_receive_uint8(void* pointer, uint8_t* byte){
+void twi_receive_uint8(void* pointer, uint8_t* byte){
 	Twi *p_twi = (Twi *)(pointer);
 	while ((p_twi->TWI_SR & (1<<1)) == 0){} // poll RXRDY
 	*byte = p_twi->TWI_RHR;
-	return 0;
 }
 
 /* twi_slave_send_uint8()
  *
  * Slave send method for TWI.
  */
-int twi_send_uint8(void* pointer, uint8_t byte){
+void twi_send_uint8(void* pointer, uint8_t byte){
 	Twi *p_twi = (Twi *)(pointer);
 	while ((p_twi->TWI_SR & (1<<2)) == 0){} // poll TXRDY 
 	p_twi->TWI_THR = byte;
-	return 0;
 }
 
 /* twi_flush()
  *
  * Wait_for_transaction_complete
  */
-int twi_flush(void* pointer){
+void twi_flush(void* pointer){
 	Twi *p_twi = (Twi *)(pointer);
  	// wait_for_transaction_complete
 	while ((p_twi->TWI_SR & (1 << 11)) == 0){} // poll EOSACC
 	while ((p_twi->TWI_SR & (1 << 0)) == 0){} // poll TXCOMP
-	return 0;
 }
 
 void twi_close(void* pointer){

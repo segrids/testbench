@@ -1,109 +1,5 @@
-#include "apdu.h"
-#include "slave.h"  
-#include "crypthandler.h"
 
-/* definition of curve NIST p-256: */
-#define BYTES_TO_WORDS_8(a, b, c, d, e, f, g, h) 0x##d##c##b##a, 0x##h##g##f##e
-struct uECC_Curve_t curve_secp256r1 = {
-    NUM_ECC_WORDS,
-    NUM_ECC_BYTES,
-    256, /* num_n_bits */ {
-        BYTES_TO_WORDS_8(FF, FF, FF, FF, FF, FF, FF, FF),
-        BYTES_TO_WORDS_8(FF, FF, FF, FF, 00, 00, 00, 00),
-            BYTES_TO_WORDS_8(00, 00, 00, 00, 00, 00, 00, 00),
-            BYTES_TO_WORDS_8(01, 00, 00, 00, FF, FF, FF, FF)
-    }, {
-        BYTES_TO_WORDS_8(51, 25, 63, FC, C2, CA, B9, F3),
-                BYTES_TO_WORDS_8(84, 9E, 17, A7, AD, FA, E6, BC),
-                BYTES_TO_WORDS_8(FF, FF, FF, FF, FF, FF, FF, FF),
-                BYTES_TO_WORDS_8(00, 00, 00, 00, FF, FF, FF, FF)
-    }, {
-        BYTES_TO_WORDS_8(96, C2, 98, D8, 45, 39, A1, F4),
-                BYTES_TO_WORDS_8(A0, 33, EB, 2D, 81, 7D, 03, 77),
-                BYTES_TO_WORDS_8(F2, 40, A4, 63, E5, E6, BC, F8),
-                BYTES_TO_WORDS_8(47, 42, 2C, E1, F2, D1, 17, 6B),
-
-                BYTES_TO_WORDS_8(F5, 51, BF, 37, 68, 40, B6, CB),
-                BYTES_TO_WORDS_8(CE, 5E, 31, 6B, 57, 33, CE, 2B),
-                BYTES_TO_WORDS_8(16, 9E, 0F, 7C, 4A, EB, E7, 8E),
-                BYTES_TO_WORDS_8(9B, 7F, 1A, FE, E2, 42, E3, 4F)
-    }, {
-        BYTES_TO_WORDS_8(4B, 60, D2, 27, 3E, 3C, CE, 3B),
-                BYTES_TO_WORDS_8(F6, B0, 53, CC, B0, 06, 1D, 65),
-                BYTES_TO_WORDS_8(BC, 86, 98, 76, 55, BD, EB, B3),
-                BYTES_TO_WORDS_8(E7, 93, 3A, AA, D8, 35, C6, 5A)
-    }
-};
-
-struct uECC_Curve_t * curve = &curve_secp256r1;
-
-int default_CSPRNG(uint8_t *dest, unsigned int size) {
-	for(unsigned int i=0; i< size; i++){
-
-		dest[i] = 0xa5;
-	}
-	return 0;
-}
-
-void __set(void *to, uint8_t val, unsigned int len) {
-    for(unsigned int i=0; i<len; i++){
-        ((uint8_t *)to)[i] = val;
-    }
-}
-
-/*
-	Test der Funktion uECC_make_key_with_d mit Testvektoren d_vec, qx_vec, qy_vec
-*/
-int test_make_key(unsigned int *d_native, uint8_t *expected_pub_bytes, uint8_t *expected_prv_bytes) {
-    uint8_t pub_bytes[2*NUM_ECC_BYTES];
-    uint8_t prv_bytes[NUM_ECC_BYTES];
-    uECC_make_key_with_d(pub_bytes, prv_bytes, d_native, curve);
-	int i;
-	for (i=0; i<NUM_ECC_BYTES; i++){
-		if ((pub_bytes[i] != expected_pub_bytes[i]) | (prv_bytes[i] != expected_prv_bytes[i])) {
-			return FAIL;
-		}
-	}
-	for (; i<2*NUM_ECC_BYTES; i++){
-		if (pub_bytes[i] != expected_pub_bytes[i]) {
-			return FAIL;
-		}
-	}
-	return SUCCESS;
-}
-
-
-/*
-	Test der Funktion uECC_sign_with_k
-
-Inputs:
-
-	msg_bin = HexToBin(msg_char[i])
-	private_bytes = private_bytes(i)
-	k_native = HexToNative(k[i])
-
-Output:
-
-	sig_bytes, sollte gleich HexToBin(r_char) || HexToBin(s_char) sein
-*/
-int sign_msg_with_k(TCSha256State_t hash, uint8_t *sig_bytes, uint8_t *private_bytes, uint8_t *msg_bin, 
-	     uECC_word_t *k_native){
-	uint8_t  digest_bytes[TC_SHA256_DIGEST_SIZE];
-	tc_sha256_init(hash);
-	tc_sha256_update(hash, msg_bin, 128);
-	tc_sha256_final(digest_bytes, hash);
-	return uECC_sign_with_k(private_bytes, digest_bytes, 
-	    sizeof(digest_bytes), k_native, sig_bytes, curve); 
-	//test_make_key(unsigned int *d_native, uint8_t *expected_pub_bytes, uint8_t *expected_prv_bytes)
-}
-
-
-/* 
-
-	 *
-	 * [P-256,SHA-256]
-	 *
-	char *d[] = {
+char_d = [
 		"519b423d715f8b581f4fa8ee59f4771a5b44c8130b4e3eacca54a56dda72b464",
 		"0f56db78ca460b055c500064824bed999a25aaf48ebb519ac201537b85479813",
 		"e283871239837e13b95f789e6e1af63bf61c918c992e62bca040d64cad1fc2ef",
@@ -119,9 +15,9 @@ int sign_msg_with_k(TCSha256State_t hash, uint8_t *sig_bytes, uint8_t *private_b
 		"b58f5211dff440626bb56d0ad483193d606cf21f36d9830543327292f4d25d8c",
 		"54c066711cdb061eda07e5275f7e95a9962c6764b84f6f1f3ab5a588e0a2afb1",
 		"34fa4682bf6cb5b16783adcd18f0e6879b92185f76d7c920409f904f522db4b1",
-	};
+	]
 
-	char *k[] = {
+char_k = [
 		"94a1bbb14b906a61a280f245f9e93c7f3b4a6247824f5d33b9670787642a68de",
 		"6d3e71882c3b83b156bb14e0ab184aa9fb728068d3ae9fac421187ae0b2f34c6",
 		"ad5e887eb2b380b8d8280ad6e5ff8a60f4d26243e0124c2f31a297b5d0835de2",
@@ -137,9 +33,9 @@ int sign_msg_with_k(TCSha256State_t hash, uint8_t *sig_bytes, uint8_t *private_b
 		"e158bf4a2d19a99149d9cdb879294ccb7aaeae03d75ddd616ef8ae51a6dc1071",
 		"646fe933e96c3b8f9f507498e907fdd201f08478d0202c752a7c2cfebf4d061a",
 		"a6f463ee72c9492bc792fe98163112837aebd07bab7a84aaed05be64db3086f4",
- 	};
+ 	]
 
-	char *Msg[] = {
+char_Msg = [
 		"5905238877c77421f73e43ee3da6f2d9e2ccad5fc942dcec0cbd25482935faaf416983fe16"
 		"5b1a045ee2bcd2e6dca3bdf46c4310a7461f9a37960ca672d3feb5473e253605fb1ddfd280"
 		"65b53cb5858a8ad28175bf9bd386a5e471ea7a65c17cc934a9d791e91491eb3754d0379979"
@@ -200,9 +96,9 @@ int sign_msg_with_k(TCSha256State_t hash, uint8_t *sig_bytes, uint8_t *private_b
 		"993adb20c269f60a5226111828578bcc7c29e6e8d2dae81806152c8ba0c6ada1986a1983eb"
 		"eec1473a73a04795b6319d48662d40881c1723a706f516fe75300f92408aa1dc6ae4288d20"
 		"46f23c1aa2e54b7fb6448a0da922bd7f34",
-	};
+	]
 
-	char *Qx[] = {
+char_Qx = [
 		"1ccbe91c075fc7f4f033bfa248db8fccd3565de94bbfb12f3c59ff46c271bf83",
 		"e266ddfdc12668db30d4ca3e8f7749432c416044f2d2b8c10bf3d4012aeffa8a",
 		"74ccd8a62fba0e667c50929a53f78c21b8ff0c3c737b0b40b1750b2302b0bde8",
@@ -218,9 +114,9 @@ int sign_msg_with_k(TCSha256State_t hash, uint8_t *sig_bytes, uint8_t *private_b
 		"68229b48c2fe19d3db034e4c15077eb7471a66031f28a980821873915298ba76",
 		"0a7dbb8bf50cb605eb2268b081f26d6b08e012f952c4b70a5a1e6e7d46af98bb",
 		"105d22d9c626520faca13e7ced382dcbe93498315f00cc0ac39c4821d0d73737",
-	};
+	]
 
-	char *Qy[] = {
+char_Qy = [
 		"ce4014c68811f9a21a1fdb2c0e6113e06db7ca93b7404e78dc7ccd5ca89a4ca9",
 		"bfa86404a2e9ffe67d47c587ef7a97a7f456b863b4d02cfc6928973ab5b1cb39",
 		"29074e21f3a0ef88b9efdf10d06aa4c295cc1671f758ca0e4cd108803d0f2614",
@@ -236,9 +132,9 @@ int sign_msg_with_k(TCSha256State_t hash, uint8_t *sig_bytes, uint8_t *private_b
 		"303e8ee3742a893f78b810991da697083dd8f11128c47651c27a56740a80c24c",
 		"f26dd7d799930062480849962ccf5004edcfd307c044f4e8f667c9baa834eeae",
 		"6c47f3cbbfa97dfcebe16270b8c7d5d3a5900b888c42520d751e8faf3b401ef4",
-	};
+	]
 
-  	char *R[] = {
+char_R = [
 		"f3ac8061b514795b8843e3d6629527ed2afd6b1f6a555a7acabb5e6f79c8c2ac",
 		"976d3a4e9d23326dc0baa9fa560b7c4e53f42864f508483a6473b6a11079b2db",
 		"35fb60f5ca0f3ca08542fb3cc641c8263a2cab7a90ee6a5e1583fac2bb6f6bd1",
@@ -254,9 +150,9 @@ int sign_msg_with_k(TCSha256State_t hash, uint8_t *sig_bytes, uint8_t *private_b
 		"e67a9717ccf96841489d6541f4f6adb12d17b59a6bef847b6183b8fcf16a32eb",
 		"b53ce4da1aa7c0dc77a1896ab716b921499aed78df725b1504aba1597ba0c64b",
 		"542c40a18140a6266d6f0286e24e9a7bad7650e72ef0e2131e629c076d962663",
-	};
+	]
 
-	char *S[] = {
+char_S = [
 		"8bf77819ca05a6b2786c76262bf7371cef97b218e96f175a3ccdda2acc058903",
 		"1b766e9ceb71ba6c01dcd46e0af462cd4cfa652ae5017d4555b8eeefe36e1932",
 		"ee59d81bc9db1055cc0ed97b159d8784af04e98511d0a9a407b99bb292572e96",
@@ -272,213 +168,81 @@ int sign_msg_with_k(TCSha256State_t hash, uint8_t *sig_bytes, uint8_t *private_b
 		"9ae6ba6d637706849a6a9fc388cf0232d85c26ea0d1fe7437adb48de58364333",
 		"d7c246dc7ad0e67700c373edcfdd1c0a0495fc954549ad579df6ed1438840851",
 		"4f7f65305e24a6bbb5cff714ba8f5a2cee5bdc89ba8d75dcbf21966ce38eb66f",
-	};
-*/
-
-/*
-	msg_bin = HexToBin(msg_char[i])
-	msg_len = 128
-	pub_bytes = pub_bytes(i); 64 Bytes
-	sig_bytes = sig_bytes(i); 64 Bytes
-
-*/
-int verify_vector(TCSha256State_t hash, uint8_t *msg_bin, uint8_t *pub_bytes, uint8_t *sig_bytes) {
-	uint8_t  digest_bytes[TC_SHA256_DIGEST_SIZE];   // 32 Bytes
-	unsigned int digest[TC_SHA256_DIGEST_SIZE / 4]; // 8 Words
-	tc_sha256_init(hash);
-	tc_sha256_update(hash, msg_bin, 128);
-	tc_sha256_final(digest_bytes, hash);
-	int hash_dwords = TC_SHA256_DIGEST_SIZE / 4;
-	if (NUM_ECC_WORDS < hash_dwords) {
-		hash_dwords = NUM_ECC_WORDS;
-	}
-	__set(digest, 0, NUM_ECC_BYTES - 4 * hash_dwords);
-	uECC_vli_bytesToNative(digest + (NUM_ECC_WORDS-hash_dwords), digest_bytes,
-			       TC_SHA256_DIGEST_SIZE);
-
-	if (SUCCESS != uECC_valid_public_key(pub_bytes, curve)) {
-		return FAIL;
-	} else {
-		return uECC_verify(pub_bytes, digest_bytes, sizeof(digest_bytes), sig_bytes, curve);
-	}
-}
+	]
 
 
-int montecarlo_signverify(void) {
-	//printf("Test #3: Monte Carlo (%d Randomized EC-DSA signatures) ", num_tests);
-	//printf("NIST-p256, SHA2-256\n  ");
-	uint8_t private[NUM_ECC_BYTES];
-	uint8_t public[2*NUM_ECC_BYTES];
-	uint8_t hash[NUM_ECC_BYTES];
-	unsigned int hash_words[NUM_ECC_WORDS];
-	uint8_t sig[2*NUM_ECC_BYTES];
-	uECC_generate_random_int(hash_words, curve->n, BITS_TO_WORDS(curve->num_n_bits));
-	uECC_vli_nativeToBytes(hash, NUM_ECC_BYTES, hash_words);
-	if (uECC_make_key(public, private, curve) == FAIL) {
-		return FAIL;
-	}
-	if (uECC_sign(private, hash, sizeof(hash), sig, curve) == FAIL) {
-		return FAIL + 1;
-	}
-	if (uECC_verify(public, hash, sizeof(hash), sig, curve) == FAIL) {
-		return FAIL + 2;
-	}
-	return SUCCESS;
-}
+import py
+from hashlib import sha256
 
-struct tc_aes_key_sched_struct expected = {
-		{
-			0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c,
-			0xa0fafe17, 0x88542cb1, 0x23a33939, 0x2a6c7605,
-			0xf2c295f2, 0x7a96b943, 0x5935807a, 0x7359f67f,
-			0x3d80477d, 0x4716fe3e, 0x1e237e44, 0x6d7a883b,
-			0xef44a541, 0xa8525b7f, 0xb671253b, 0xdb0bad00,
-			0xd4d1c6f8, 0x7c839d87, 0xcaf2b8bc, 0x11f915bc,
-			0x6d88a37a, 0x110b3efd, 0xdbf98641, 0xca0093fd,
-			0x4e54f70e, 0x5f5fc9f3, 0x84a64fb2, 0x4ea6dc4f,
-			0xead27321, 0xb58dbad2, 0x312bf560, 0x7f8d292f,
-			0xac7766f3, 0x19fadc21, 0x28d12941, 0x575c006e,
-			0xd014f9a8, 0xc9ee2589, 0xe13f0cc8, 0xb6630ca6
-		}
-	};
+def hash_bin(msg):
+	h = sha256()
+	h.update(msg)
+	return h.digest()
 
-struct tc_aes_key_sched_struct sched;
-    
-uint8_t nist_key[16] = {
-        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
-    };
-uint8_t nist_input[16] = {
-        0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d,
-        0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34
-    };
-uint8_t expected_output[16] = {
-        0x39, 0x25, 0x84, 0x1d, 0x02, 0xdc, 0x09, 0xfb,
-        0xdc, 0x11, 0x85, 0x97, 0x19, 0x6a, 0x0b, 0x32
-    };
+def hash_bytes(msg_bytes):
+	msg = py.Uint8ToBin(msg_bytes)
+	ret = hash_bin(msg)
+	return py.BinToUint8(ret)
 
+"""
+Bigendian: das Dicke Ende ist vorne
+lsb first: das dünne Ende ist vorne
+
+HexToNative soll der Funktion
+
+	string2scalar
+
+alsoder Kombination der Funktion 
+
+	hex2bin
+	uECC_vli_bytesToNative 
+
+entsprechen.
+"""
+def HexToNative(h):
+	return py.BinToUint32(py.bh(h), lsb_first=False)[::-1]
+
+NUM_ECC_WORDS = 8
+NUM_ECC_BYTES = 32
+TC_SHA256_DIGEST_SIZE = 32 # 128 Bytes
+
+uint8_Msg = [py.HexToUint8(x) for x in char_Msg]
+native_d   = [HexToNative(x) for x in char_d]     # 
+native_k   = [HexToNative(x) for x in char_k]     # random k
+native_Qx   = [HexToNative(x) for x in char_Qx]   # first 8 words of pub
+native_Qy   = [HexToNative(x) for x in char_Qy]   # second 8 words of pub
+native_R   = [HexToNative(x) for x in char_R]     # first 8 words of sig
+native_S   = [HexToNative(x) for x in char_S]     # second 8 words of sig
+
+def pub_bytes(i):
+	return py.HexToUint8(char_Qx[i] + char_Qy[i]) # 64 Bytes
 	
-int test_aes(void){
-	uint8_t ciphertext[16];
+def pub(i):
+	return np.append(HexToNative(char_Qx[i]), HexToNative(char_Qy[i])) # 16 Words
+	
+def sig_bytes(i):
+	return py.HexToUint8(char_R[i] + char_S[i]) # 64 Bytes
 
-	if (tc_aes128_set_encrypt_key(&sched, nist_key) == 0) {
-		return 1;
-	}
-	if (sizeof(sched.words) != sizeof(expected.words)) {
-		return 2;
-	}
-	for (int i=0; i<44; i++){
-		if (sched.words[i] != expected.words[i]) {
-			return 3;
-		}
-	}
-	if (tc_aes_encrypt(ciphertext, nist_input, &sched) == 0) {
-		return 4;
-	}
-	/*if (memcmp(expected.words, sched.words, sizeof(sched.words))) {
-		return 3;
-	}*/
-	for (int i=0; i<16; i++){
-		if (ciphertext[i] != expected_output[i]) {
-			return 5;
-		}
-	}
-	return 0;
-}
+def private_bytes(i):
+	return py.HexToUint8(char_d[i]) # 32 Bytes (256 bit)
 
+"""
+	Input zu sign_msg_with_k
+"""
+def msg_bytes(i):
+	return py.HexToUint8(char_Msg[i]) # 128 Bytes
 
-struct tc_sha256_state_struct sha256_ctx;
+"""
+	Input zu uECC_sign_with_k()
+"""
+def digest_bytes(i):
+	return hash_bytes(msg_bytes(i))
 
+def k_native(i):
+	return HexToNative(char_k[i])
 
-int handle_crypt(void){
-	uint16_t status = 0x9000;
-	if (apdu.ins == 'T') { // AES key scedule test
-		if (apdu.lc != 0){
-			status = 0xcc78;
-		} else if (apdu.le != 0){
-			status = 0xcc79;
-		} else {
-			status += (uint16_t)test_aes();
-		}
-	} else if (apdu.ins == 'M') { // montecarlo test
-		if (apdu.lc != 0){
-			status = 0xcd78;
-		} else if (apdu.le != 0){
-			status = 0xcd79;
-		} else {
-			status += (uint8_t)montecarlo_signverify();
-		}
-	} else if (apdu.ins == 'V') { // validate public key versus curve
-		if (apdu.lc != 0){
-			status = 0xcc78;
-		} else if (apdu.le != 0){
-			status = 0xc279;
-		} else {
-			// see ecc_formats.pub_bytes
-			uint8_t pub_bytes[] = {28, 203, 233,  28,   7,  95, 199, 244, 240,  51, 191, 162,  72,
-                                  219, 143, 204, 211,  86,  93, 233,  75, 191, 177,  47,  60,  89,
-                                  255,  70, 194, 113, 191, 131, 206,  64,  20, 198, 136,  17, 249,
-                                  162,  26,  31, 219,  44,  14,  97,  19, 224, 109, 183, 202, 147,
-                                  183,  64,  78, 120, 220, 124, 205,  92, 168, 154,  76, 169};
-			status += uECC_valid_public_key(pub_bytes, curve);
-		}
-	} else if (apdu.ins == 'P') { // validate that public key is a valid point
-		if (apdu.lc != 0){
-			status = 0xcc78;
-		} else if (apdu.le != 0){
-			status = 0xc279;
-		} else {
-			// see ecc_formats.pub
-			uint32_t pub[] = {
-       3262234499, 1012531014, 1270853935, 3545652713, 1222348748,
-       4029923234,  123717620,  483125532, 2828684457, 3699166556,
-       3074444920, 1840761491,  241243104,  438295340, 2282879394,
-       3460306118
-			};
-			status += uECC_valid_point((uECC_word_t *)pub, curve);
-		}
-	} else if (apdu.ins == 'K') { // ECDSA test
-		if (apdu.lc != 0){
-			status = 0xcc78;
-		} else if (apdu.le != 64){
-			status = 0xcc79;
-		} else {
-			/*status += sign_msg_with_k(TCSha256State_t hash, 
-							uint8_t *sig_bytes, 
-							uint8_t *private_bytes, 
-							uint8_t *msg_bin,
-         					uECC_word_t *k_native);*/
-			uint8_t private_bytes[32] = {
-				81, 155,  66,  61, 113,  95, 139,  88,  31,  79, 168, 238,  89,
-       			244, 119,  26,  91,  68, 200,  19,  11,  78,  62, 172, 202,  84,
-       			165, 109, 218, 114, 180, 100
-			};
-			uint8_t digest_bytes[32] = {
-				68, 172, 246, 183, 227, 108,  19,  66, 194, 197, 137, 114,   4,
-       			254,   9,  80,  78,  30,  46, 251,  26, 144,   3, 119, 219, 196,
-       			231, 166, 161,  51, 236,  86
-			};
-			uECC_word_t k_native[8] = {
-				1680500958, 3110537095, 2186239283,  994730567, 4192812159,
-       			2726359621, 1267755617, 2493627313
-			};
-			uint8_t sig_bytes[64];
-			status += (uint16_t) uECC_sign_with_k(private_bytes, 
-												  digest_bytes, 
-	    										  32, 
-                                                  k_native, 
-                                                  sig_bytes, 
-                                                  curve); 
-			for (int i=0; i<64; i++){
-				slave_send_uint8(sig_bytes[i]);
-			}
-		}
-	} else {
-		status = 0xcc66; // unknown ins
-	}	
-	slave_send_uint16(status);
-	return 0;
-}
-
-
-
+def sig_test():
+	l = py.loader.loader("/dev/ttyACM0")
+	l.apdu.serial.timeout = 20 # wichtig, da 2s zu kurz
+	assert np.all( py.BinToUint8(l.apdu.sendreceive(cla=b"C", ins=b'K', data=b'', res_len=64)[0]) == 
+                       sig_bytes(0) )

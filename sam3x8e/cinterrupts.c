@@ -28,7 +28,8 @@ SOFTWARE.
 #include "types.h"
 #include "scb.h" 
 #include "utils.h"
-#include "uart.h"
+#include "slave.h"
+#include "apdu.h"
 
 
 /*
@@ -84,3 +85,11 @@ void UsageFault_Handler(void) {
 	utils_error(0x6);
 }
 
+void SysTick_Handler(void){
+	utils_toggle_led();
+	for (int i=0; i<apdu.le; i++){
+		slave_send_uint8(0);   // to avoid testbench hanging
+	}
+	slave_send_uint16(0x5451); // Error code 
+	Reset_Handler();
+}

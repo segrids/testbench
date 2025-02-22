@@ -26,6 +26,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "master.h"
 
 #include "uart.h"
+#include "usart.h"
 #include "twi.h"
 #include "spi.h"
 #include "hdq.h"
@@ -52,11 +53,10 @@ master_t master_interface;
  *       config: protocol specific 8-bit encoding of interface configuration 
  */
 int master_init(uint8_t protocol, uint8_t config){
-	int ret;
 	if (protocol == 'I') {
 		// I2C master interface on Arduino Due is always TWI0
 		twi_enable(TWI1);
-		ret = twi_set_master_mode(TWI1, config);
+		twi_set_master_mode(TWI1, config);
 		master_interface.pointer = (void *)TWI1;
 		master_interface.send_data = (int (*)(void *, uint8_t, uint8_t *, int)) &twi_master_send_data;
 		master_interface.receive_data = (int (*)(void *, uint8_t, uint8_t *, int)) &twi_master_receive_data;
@@ -65,24 +65,28 @@ int master_init(uint8_t protocol, uint8_t config){
 		// SPI master interface on Arduino Due is SPI0 (since only one SPI interface, slave as well)
 		spi_enable(SPI0, 1); // 1=MASTER MODE
 		spi_flush_receiver(SPI0);
-		ret = 0;
 		master_interface.pointer = (void *)SPI0;
 		master_interface.send_data = (int (*)(void *, uint8_t, uint8_t *, int)) &spi_master_send_data;
 		master_interface.receive_data = (int (*)(void *, uint8_t, uint8_t *, int)) &spi_master_receive_data;
 		master_interface.close = (void (*)(void *)) &spi_close;
 	} else if (protocol == 'H') {
-		ret = 0;
 		hdq_init(HDQ0, 0);
-		master_interface.pointer = (void *)&hdq; // equivalent to malloc(sizeof(Hdq)) ???
+		master_interface.pointer = (void *)&hdq;
 		// HDQ interface (Arduino Due Pins 14 and 15)
 		master_interface.send_data = (int (*)(void *, uint8_t, uint8_t *, int)) &hdq_master_send_data;
 		master_interface.receive_data = (int (*)(void *, uint8_t, uint8_t *, int)) &hdq_master_receive_data;
 		master_interface.close = (void (*)(void *)) &hdq_close;
+	} else if (protocol == 'V') {
+		usart_configure(USART1, 24000000, 115200); // TODO: configuration depending on `config`
+		master_interface.pointer = (void *)USART1;
+		master_interface.send_data = (int (*)(void *, uint8_t, uint8_t *, int)) &usart_master_send_data;
+		master_interface.receive_data = (int (*)(void *, uint8_t, uint8_t *, int)) &usart_master_receive_data;
+		master_interface.close = (void (*)(void *)) &usart_close;
 		
 	} else {
 		return -1; // TODO: Error code
 	}
-	return ret;
+	return 0;
 }
 
 /* master_send_data()

@@ -26,7 +26,8 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "slave.h"
 
 #include "uart.h"
-#ifdef FLASH
+#ifndef BOOTLOADER
+#include "usart.h"
 #include "twi.h"
 #include "spi.h"
 #include "hdq.h"
@@ -52,36 +53,45 @@ slave_t slave_interface;
  * args: protocol in {'U': UART, 'S': SPI, 'I': I2C}
  *       slave_address: only relevant for protocol 'I' so far
  *       config: protocol specific 32-bit encoding of interface configuration 
+
+
  */
 int slave_init(uint8_t protocol, uint8_t slave_address, uint8_t config){
 	if (protocol == 'U') {
 		// UART
 		uart_configure(UART, 24000000, 115200);
 		slave_interface.pointer = (void *)UART;
-		slave_interface.send_uint8 = (int (*)(void *, uint8_t)) &uart_send_uint8;
-		slave_interface.receive_uint8 = (int (*)(void *, uint8_t *)) &uart_receive_uint8;
+		slave_interface.send_uint8 = (void (*)(void *, uint8_t)) &uart_send_uint8;
+		slave_interface.receive_uint8 = (void (*)(void *, uint8_t *)) &uart_receive_uint8;
 		slave_interface.close = (void (*)(void *)) &uart_close;
-#ifdef FLASH
+#ifndef BOOTLOADER
+	} else if (protocol == 'V') {
+		// USART1 slave interface (Due Pins 16 and 17)
+		usart_configure(USART1, 24000000, 115200);
+		slave_interface.pointer = (void *)USART1;
+		slave_interface.send_uint8 = (void (*)(void *, uint8_t)) &usart_send_uint8;
+		slave_interface.receive_uint8 = (void (*)(void *, uint8_t *)) &usart_receive_uint8;
+		slave_interface.close = (void (*)(void *)) &usart_close;
 	} else if (protocol == 'I') {
 		// I2C slave interface on Arduino Due is always TWI0
 		twi_enable(TWI0);
 		twi_set_slave_mode(TWI0, slave_address);
 		slave_interface.pointer = (void *)TWI0;
-		slave_interface.send_uint8 = (int (*)(void *, uint8_t)) &twi_send_uint8;
-		slave_interface.receive_uint8 = (int (*)(void *, uint8_t *)) &twi_receive_uint8;
+		slave_interface.send_uint8 = (void (*)(void *, uint8_t)) &twi_send_uint8;
+		slave_interface.receive_uint8 = (void (*)(void *, uint8_t *)) &twi_receive_uint8;
 		slave_interface.close = (void (*)(void *)) &twi_close;
 	} else if (protocol == 'S') {
 		// SPI slave interface on Arduino Due is SPI0 (since only one SPI interface, master as well)
 		spi_enable(SPI0, 0); // 0=SLAVE MODE
 		slave_interface.pointer = (void *)SPI0;
-		slave_interface.send_uint8 = (int (*)(void *, uint8_t)) &spi_send_uint8;
-		slave_interface.receive_uint8 = (int (*)(void *, uint8_t *)) &spi_receive_uint8;
+		slave_interface.send_uint8 = (void (*)(void *, uint8_t)) &spi_send_uint8;
+		slave_interface.receive_uint8 = (void (*)(void *, uint8_t *)) &spi_receive_uint8;
 		slave_interface.close = (void (*)(void *)) &spi_close;
 	} else if (protocol == 'H') {
 		hdq_init(HDQ0, 0);
 		slave_interface.pointer = (void *)&hdq; // equivalent to malloc(sizeof(Hdq)) ???
-		slave_interface.send_uint8 = (int (*)(void *, uint8_t)) &hdq_send_uint8;
-		slave_interface.receive_uint8 = (int (*)(void *, uint8_t *)) &hdq_receive_uint8;
+		slave_interface.send_uint8 = (void (*)(void *, uint8_t)) &hdq_send_uint8;
+		slave_interface.receive_uint8 = (void (*)(void *, uint8_t *)) &hdq_receive_uint8;
 		slave_interface.close = (void (*)(void *)) &hdq_close;
 #endif
 	} else {
@@ -95,42 +105,36 @@ int slave_init(uint8_t protocol, uint8_t slave_address, uint8_t config){
  * Abstraction of peripheral interface specific send method.
  *
  */
-int slave_send_uint8(uint8_t byte){
-	return slave_interface.send_uint8(slave_interface.pointer, byte);
+void slave_send_uint8(uint8_t byte){
+	slave_interface.send_uint8(slave_interface.pointer, byte);
 }
 
 /* slave_send_uint16()
  *
  * Send uint_16.
  */
-int slave_send_uint16(uint16_t nibble){
-	int ret;
-	ret = slave_send_uint8((uint8_t)nibble);
-	ret |= slave_send_uint8((uint8_t)(nibble >> 8));
-	return ret;
+void slave_send_uint16(uint16_t nibble){
+	slave_send_uint8((uint8_t)nibble);
+	slave_send_uint8((uint8_t)(nibble >> 8));
 }
 
 /* slave_send_uint32()
  *
  * Send uint_32.
  */
-int slave_send_uint32(uint32_t word){
-	int ret;
-	ret = slave_send_uint16((uint16_t)word);
-	ret |= slave_send_uint16((uint16_t)(word >> 16));
-	return ret;
+void slave_send_uint32(uint32_t word){
+	slave_send_uint16((uint16_t)word);
+	slave_send_uint16((uint16_t)(word >> 16));
 }
 
 /* slave_send_data()
  *
  * Send buffer of given length.
  */
-int slave_send_data(uint8_t *data, int length){
-	int ret = 0;
+void slave_send_data(uint8_t *data, int length){
 	for (int i=0; i<length; i++){
-		ret |= slave_send_uint8(data[i]);
+		slave_send_uint8(data[i]);
 	}
-	return ret;
 }
 
 /* slave_receive_uint8()
@@ -138,19 +142,17 @@ int slave_send_data(uint8_t *data, int length){
  * Abstraction of peripheral interface specific receive method.
  *
  */
-int slave_receive_uint8(uint8_t *p_byte){
-	return slave_interface.receive_uint8(slave_interface.pointer, p_byte);
+void slave_receive_uint8(uint8_t *p_byte){
+	slave_interface.receive_uint8(slave_interface.pointer, p_byte);
 }
 
 /* slave_receive_uint16()
  *
  * Reveive uint16_t.
  */
-int slave_receive_uint16(uint16_t *p_nibble){
-	int ret;
-	ret = slave_receive_uint8((uint8_t *)p_nibble);
-	ret |= slave_receive_uint8(((uint8_t *)p_nibble) + 1);
-	return ret;
+void slave_receive_uint16(uint16_t *p_nibble){
+	slave_receive_uint8((uint8_t *)p_nibble);
+	slave_receive_uint8(((uint8_t *)p_nibble) + 1);
 }
 /*  slave_receive_uint32()
  *
@@ -158,25 +160,21 @@ int slave_receive_uint16(uint16_t *p_nibble){
  * Important feature: buffer the uint32_t in a local variable and write word wise 
  * to the target location. To be used for flash writes, where only word writes are allowed.
  */
-int slave_receive_uint32(uint32_t *p_word){
-	int ret;
+void slave_receive_uint32(uint32_t *p_word){
 	uint32_t word;
-	ret = slave_receive_uint16((uint16_t *)(&word));
-	ret |= slave_receive_uint16((uint16_t *)(&word) + 1);
+	slave_receive_uint16((uint16_t *)(&word));
+	slave_receive_uint16((uint16_t *)(&word) + 1);
 	*p_word = word;
-	return ret;
 }
 
 /* slave_send_data()
  *
  * Receive data of given length.
  */
-int slave_receive_data(uint8_t *data, int length){
-	int ret = 0;
+void slave_receive_data(uint8_t *data, int length){
 	for (int i=0; i<length; i++){
-		ret |= slave_receive_uint8(data + i);
+		slave_receive_uint8(data + i);
 	}
-	return ret;
 }
 
 /* slave_close() */

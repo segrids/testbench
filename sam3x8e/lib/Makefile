@@ -1,4 +1,4 @@
-objects := scb.o uart.o apdu.o wdt.o rtt.o pmc.o pio.o eefc.o tc.o ivt.o \
+objects := scb.o uart.o usart.o apdu.o wdt.o rtt.o pmc.o pio.o eefc.o tc.o ivt.o \
 	systick.o rstc.o nvic.o twi.o spi.o hdq.o li.o types.o master.o
 
 # object files depending on compiler switch

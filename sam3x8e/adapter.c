@@ -26,6 +26,7 @@ Author: SEGRIDS GmbH <www.segrids.com>
 #include "adapter.h"
 #include "pio.h"
 #include "rtt.h"
+#include "systick.h"
 #include "slave.h"
 #include "master.h"
 #include "apdu.h"
@@ -35,7 +36,7 @@ Author: SEGRIDS GmbH <www.segrids.com>
  * Arduino Due as adapter between slave_interface and master_interface
  *
  * handles instructions
- * 	'O' (Open):    Initialize a slave interface specified by `protocol = arg[0]` 
+ * 	'O' (Open):    Initialize a master interface specified by `protocol = arg[0]` 
  * 	               with configuration selected by `config = arg[1]`
  *      'C' (Close):   Close the slave interface
  *	'R' (Read):    Receive `apdu.le` bytes on the slave interface and send 
@@ -45,9 +46,11 @@ Author: SEGRIDS GmbH <www.segrids.com>
  */
 int handle_adapter(void) {
 	uint16_t status = 0;
-
+	// since the adapter also shall serve as debugger, use the systick
+	// as a watchdog timer. The systick interrupt will restart the apdu loop.
+	//systick_enable(SYSTICK, 1024*1024, 1, 1); //systick with interrupt clocked with MCK/8
 	if (apdu.ins == 'O') {
-		uint8_t protocol = apdu.data[0]; // in {'U', 'I', 'S', 'H'}
+		uint8_t protocol = apdu.data[0]; // in {'U', 'V', 'I', 'S', 'H'}
 		uint8_t config = apdu.data[1];
 		status = (uint16_t)master_init(protocol, config);
 
@@ -80,9 +83,11 @@ int handle_adapter(void) {
 		perror((void *)handle_adapter, "Unknown instruction!", apdu.ins);
 		status = 0x6D00;
 	}
+	//systick_disable(SYSTICK); // the target at the adapter did not cause an infinite wait loop
 	if (status == 0){
 		status = 0x9000;
 	}
-	return slave_send_uint16(status);
+	slave_send_uint16(status);
+	return 0;
 }
 

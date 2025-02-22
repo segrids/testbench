@@ -116,36 +116,33 @@ void spi_close(Spi* p_spi){
  *
  * Receive method for SPI as slave interface.
  */
-int spi_receive_uint8(Spi* p_spi, uint8_t* byte){
+void spi_receive_uint8(Spi* p_spi, uint8_t* byte){
 	p_spi->SPI_TDR = 0x55; /* dummy character to be sent by receiver*/
 	/* wait until TDRE == 1: data written in SPI_TDR has been transferred to the serializer */
 	while ((p_spi->SPI_SR & (1<<1)) == 0){}
 	/* wait until received byte transferred from serializer to SPI_RDR */
 	while ((p_spi->SPI_SR & (1<<0)) == 0){}
 	*byte = p_spi->SPI_RDR;   // <<<<<<<<<<<<<<<<<<<<<<<<<<<< read RDR
-	return 0;
 }
 
 /* spi_send_uint8()
  *
  * Send method for SPI as slave interface.
  */
-int spi_send_uint8(Spi* p_spi, uint8_t byte){
+void spi_send_uint8(Spi* p_spi, uint8_t byte){
 	p_spi->SPI_TDR = byte;
 	/* wait until TDRE == 1: data written in SPI_TDR has been transferred to the serializer */
 	while ((p_spi->SPI_SR & (1<<1)) == 0){}
 	/* wait until received byte transferred from serializer to SPI_RDR */
 	while ((p_spi->SPI_SR & (1<<0)) == 0){}
 	p_spi->SPI_RDR;   //dummy read RDR
-	return 0;
-
 }
 
 /* spi_master_receive_data()
  *
  * Receive method for SPI as master interface.
  */
-uint32_t spi_master_receive_data(Spi* p_spi, uint8_t slave_address, uint8_t *buffer, uint32_t buffer_len){
+int spi_master_receive_data(Spi* p_spi, uint8_t slave_address, uint8_t *buffer, uint32_t buffer_len){
 	spi_flush_receiver(p_spi);
 	/* At function entry, status must be clean, i.e.
  	 * RDRF == 0: No data has been received since the last read of SPI_RDR. 
@@ -190,7 +187,7 @@ uint32_t spi_master_receive_data(Spi* p_spi, uint8_t slave_address, uint8_t *buf
  *
  * Send method for SPI as master interface.
  */
-uint32_t spi_master_send_data(Spi* p_spi, uint8_t slave_address, uint8_t *buffer, uint32_t buffer_len){
+int spi_master_send_data(Spi* p_spi, uint8_t slave_address, uint8_t *buffer, uint32_t buffer_len){
 	/* At function entry, status must be clean, i.e.
  	 * RDRF == 0: No data has been received since the last read of SPI_RDR. 
  	 * TDRE == 1: last data written in SPI_TDR has been transferred to the serializer

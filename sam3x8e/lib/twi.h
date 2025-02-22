@@ -24,8 +24,8 @@ typedef struct {
 void twi_enable(Twi* p_twi);
 void twi_reset(Twi* p_twi);
 void twi_set_slave_mode(Twi* p_twi, uint8_t slave_address);
-int twi_receive_uint8(void* pointer, uint8_t* byte);
-int twi_send_uint8(void* pointer, uint8_t byte);
+void twi_receive_uint8(void* pointer, uint8_t* byte);
+void twi_send_uint8(void* pointer, uint8_t byte);
 void twi_close(void* pointer);
 int twi_set_master_mode(Twi* p_twi, uint8_t config);
 int twi_master_send_data(Twi* p_twi, uint8_t slave_address, uint8_t* data, int length);

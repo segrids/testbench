@@ -104,8 +104,8 @@ class SWD():
     CTRL_STAT = 0x04
     SELECT = 0x08
 
-    def __init__(self, *args, swj_switch=True, **kwargs):
-        self.apdu = apdu.Apdu(*args, **kwargs)
+    def __init__(self, s, swj_switch=True):
+        self.apdu = apdu.Apdu(s)
         if swj_switch:
             self.swj_switch()
 

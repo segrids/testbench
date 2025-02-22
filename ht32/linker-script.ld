@@ -10,8 +10,7 @@ SEARCH_DIR(.)
 MEMORY
 {
 	flash (rx)    : ORIGIN = 0x00000000, LENGTH = 0x00020000 /* Flash, 128K */
-	/* Reserve most part of RAM for module ! */
-	ram (rwx)   : ORIGIN = 0x20003c00, LENGTH = 0x00000400 /* sram, 16K */
+	ram (rwx)   : ORIGIN = 0x20000000, LENGTH = 0x00004000 /* sram, 16K */
 }
 
 /* Section Definitions */
@@ -24,6 +23,7 @@ SECTIONS
         *(.rodata)
     } > flash
 
+	. = ALIGN(4);
 
     .data :
     {
@@ -32,7 +32,9 @@ SECTIONS
 		*(.data);
 		. = ALIGN(4);
 		_erelocate = .;
-    } > ram
+    } > ram AT> flash
+
+	_etext = LOADADDR(.data);
 
     /* .bss section which is used for uninitialized data */
     .bss (NOLOAD) :

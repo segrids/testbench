@@ -31,8 +31,8 @@ typedef struct {
 
 void uart_configure(Uart * p_uart, uint32_t mck, uint32_t baud_rate);
 void uart_pdc_transfer(Uart* p_uart, uint8_t * p, uint32_t count);
-int uart_send_uint8(Uart* pointer, uint8_t byte);
-int uart_receive_uint8(Uart* pointer, uint8_t *p);
-int uart_flush(Uart* p_uart);
+void uart_send_uint8(Uart* pointer, uint8_t byte);
+void uart_receive_uint8(Uart* pointer, uint8_t *p);
+void uart_flush(Uart* p_uart);
 void uart_close(Uart* p_uart);
 #endif

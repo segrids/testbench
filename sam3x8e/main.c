@@ -59,15 +59,18 @@ Author: SEGRIDS GmbH <www.segrids.com>
  * (b) project needs:
  *
  *  PIOA
- *	 2      | A | in        | Due Pin A7  | slave select jumper | bridge with A6 to select SPI
- *	 3      | A | out       | Due Pin A6  | slave select jumper |   if not bridged, select UART 
- *	 4      | A | in        | Due Pin A5  | slave select jumper | bridge with A6 to select I2C
+ *	 2      | A | in        | Due Pin A7  | slave select jumper | bridge with GND to select SPI
+ *	 3      | A | out       | Due Pin A6  | slave select jumper | bridge with GND to select USART 
+ *	 4      | A | in        | Due Pin A5  | slave select jumper | bridge with GND to select I2C
  *	 8      | A | RX        | Due Pin  0  | UART slave   UART2USB
  *	 9      | A | TX        | Due Pin  1  | UART slave   UART2USB
- *	10      | A | RX2       | Due Pin 19  | USART0 slave  UART2BLE
- *	11      | A | TX2       | Due Pin 18  | USART0 slave  UART2BLE
- *	12      | A | RX2       | Due Pin 17  | USART1 master
- *	13      | A | TX2       | Due Pin 16  | USART1 master
+ *	10      | A | RX1       | Due Pin 19  | USART0 slave  UART2BLE
+ *	11      | A | TX1       | Due Pin 18  | USART0 slave  UART2BLE
+ *	12      | A | RX2       | Due Pin 17  | USART1 master (RXD1)
+ *	13      | A | TX2       | Due Pin 16  | USART1 master (TXD1) 
+ *	14      | A |           | Due Pin 23  | USART1 master (RTS1)
+ *	15      | A |           | Due Pin 24  | USART1 master (CTS1)
+ *	16      | A |           | Due AD0     | USART1 master (SCK1)
  *	17      | A | TWD0      | Due SDA1    | TWI0 slave
  *	18      | A | TWCK0     | Due SCL1    | TWI0 slave
  *	25      | A | MISO      | Due SPI     | SPI0 master
@@ -106,8 +109,7 @@ Author: SEGRIDS GmbH <www.segrids.com>
 void init_pio(void) {
 	// PORT A
 	pio_select_peripheral_A(PIOA, 0xF << 25);// SPI
-	pio_select_input_pins(PIOA, 5 << 2);     // Arduino Due pins A7 and A5 (ANALOG side)
-	pio_select_output_pins(PIOA, 1 << 3);    // Arduino Due pins A6 (ANALOG side)
+	pio_select_input_pins(PIOA, 7 << 2);     // Arduino Due pins A7,A6,A5 (ANALOG side)
 	// PORT B
 	pio_select_output_pins(PIOB, 1<<27);     // Arduino Due Pin 13, reserved for LED
 	pio_select_output_pins(PIOB, 1<<14);     // Arduino Due Pin 53, reserved for RED
@@ -135,6 +137,7 @@ void init_pio(void) {
  * Jumper configuration | Slave interface
  * -------------------- | ---------------
  * no jumper            | UART
+ * bridge A4 and A5     | USART1 (Due RX2 / 17, TX2 / 16)
  * bridge A5 and A6     | TWI
  * bridge A6 and A7     | SPI (for SPI slave connect A10 to GND)
  *
@@ -150,24 +153,24 @@ void init_pio(void) {
 
 
 int select_slave(void) {
-	// apply internal pull-up to PIOA.2 (Due A7) and PIOA.4 (Due A5)
-	pio_pullup_enable(PIOA, 5<<2);
-	// set PIOA.3 (Due A6) = low
-	pio_clear_output_pins(PIOA, 1<<3);  // 
+	// apply internal pull-up to PIOA.2 (Due A7), PIOA.3 (Due A6), PIOA.4 (Due A5)
+	pio_pullup_enable(PIOA, 7<<2);
 	// if PIOA.2 (Due A7) is low, select 'S' (SPI)
-	// else if PIOA.4 (Due A5) is low, select 'I' (I2C / TWI)
+	// if PIOA.3 (Due A6) is low, select 'V' (USART1)
+	// if PIOA.4 (Due A5) is low, select 'I' (I2C / TWI)
 	// else select 'U' (UART)
-	if (((pio_read_input_pins(PIOA) >> 2) & 5) == 0) {
-		return -1;
-	}
 #ifndef BOOTLOADER
 	if (((pio_read_input_pins(PIOA) >> 2) & 1) == 0) {
+		utils_blink(2, 500);
 		return slave_init('S', 0, 0);
+	} else if (((pio_read_input_pins(PIOA) >> 3) & 1) == 0) {
+		utils_blink(3, 500);
+		return slave_init('V', 0, 0);
 	} else if (((pio_read_input_pins(PIOA) >> 4) & 1) == 0) {
+		utils_blink(4, 500);
 		return slave_init('I', 0x11, 0);
 	}
 #endif
-
 	return slave_init('U', 0, 0);
 }
 
@@ -209,8 +212,8 @@ void main(void) {
 	pmc_24MHz(PMC);    // set master clock to 24MHz
 	wdt_enable(WDT, 0);// disable watchdog
 	init_pio();        // configure sam3x8e pins
-	select_slave();    // select slave interface (UART, SPI or TWI) according to jumper configuration
 	rtt_init(RTT);     // set timer resolution to 1ms
+	select_slave();    // select slave interface (UART, SPI or TWI) according to jumper configuration
 	apdu_loop(&handle_apdu); // poll the slave interface for APDUs and execute
 	utils_toggle_red();      // never should be here
 }

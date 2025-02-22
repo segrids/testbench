@@ -45,6 +45,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "crc.h"
 #include "i2c.h"
 #include "interface.h"
+#include "crypthandler.h"
 
 
 int handle_apdu(void);
@@ -88,8 +89,16 @@ void set_led(uint8_t value){
 };
 
 
+#ifdef FLASH
+extern uint32_t _etext;
+extern uint32_t _srelocate;
+extern uint32_t _erelocate;
+extern uint32_t _szero;
+extern uint32_t _ezero;
+#endif
 
-void Reset_Handler(void){
+
+void main(void){
 	ckcu_configure();
 
 	/* ------------ AFIO Configuration ----------------------- */
@@ -133,8 +142,10 @@ int handle_apdu(void) {
 		return handle_responder();
 	//} else if (apdu.cla == 'S') {
 	//	return handle_swd();
-	} else if (apdu.cla == 'T') {
+	} else if (apdu.cla == 'L') { 
 		return handle_target();
+	} else if (apdu.cla == 'C') {
+		return handle_crypt();
 	} else if (apdu.cla == 'Q') {
 		return handle_qwiic();
 	} else {
@@ -295,4 +306,34 @@ int handle_qwiic(void) {
 
 	interface_send_uint16(status);
 	return 0;
+}
+
+
+/* Reset_Handler()
+ *
+ * Copy .data section from Flash to RAM and jumps to the main function.
+ * Use pointers _etext and _srelocate provided by the linker script.
+ */
+void Reset_Handler(void) {
+	#ifdef FLASH
+	uint32_t *pSrc, *pDest;
+
+	pSrc = &_etext;
+	pDest = &_srelocate;
+
+	if (pSrc != pDest) {
+		for (; pDest < &_erelocate;) {
+			*pDest++ = *pSrc++;
+		}
+	}
+
+	for (pDest = &_szero; pDest < &_ezero; pDest++) {
+		*pDest = 0;
+	}
+	#endif
+
+	main();
+
+	// Infinite loop
+	while (1);
 }

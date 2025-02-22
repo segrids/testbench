@@ -25,17 +25,25 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  
 #include "wdt.h"
 
+
+
 /* wdt_enable
  *
  * Enable Watchdog Timer.
  */
 void wdt_enable(Wdt* p_wdt, int status){
+	/* configure WDR_MR (Mode Register)
+		bit 11-0: WDV WatchDog Value (0xfff is 16s, 0x100 is 1s)
+		bit 13: WatchDog Reset Enable
+		bit 14: Only Processor Reset
+		bit 28: Stop WatchDog Timer in Debug Mode
+	*/
 	p_wdt->WDT_MR = (p_wdt->WDT_MR & ~0x8000) | (0x8000 & (~status << 15));
 }
 
 /*  wdt_reset()
  *
- * Reset Watchdog TImer.
+ * Reset Watchdog Timer to have a new time interval before the processor reset.
  */
 void wdt_reset(Wdt* p_wdt){
 	p_wdt->WDT_CR = (0xa5 << 24) | 0x01;

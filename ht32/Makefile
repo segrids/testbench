@@ -22,7 +22,7 @@ override LDFLAGS += --entry=ivt -gdwarf
 export CFLAGS
 export LDFLAGS
 
-objects := ivt.o ckcu.o usart.o apdu.o main.o gpio.o crc.o pdma.o i2c.o interface.o
+objects := ivt.o ckcu.o usart.o apdu.o main.o gpio.o crc.o pdma.o i2c.o interface.o crypthandler.o
 
 %.o : %.S
 	$(CC) $(CFLAGS) -c $^ -o $@

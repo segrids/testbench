@@ -32,7 +32,7 @@ with a **slave interface** connected to a serial port of the test PC
 and a **master interface** connected to a port of the target (SAM3x8e, HT32F52, LPC8N04, battery ...)
 """
 
-protocols = {"SPI": b'S', "I2C": b'I', "UART": b'U', "NFC": b'N', "HDQ": b'H'}
+protocols = {"SPI": b'S', "I2C": b'I', "UART": b'U', "USART": b'V', "NFC": b'N', "HDQ": b'H'}
 
 """
 class Adapter()

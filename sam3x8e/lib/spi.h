@@ -27,16 +27,16 @@ typedef struct {
 
 void spi_enable(Spi* p_spi, int mode);
 
-int spi_receive_uint8(Spi* p_spi, uint8_t* byte);
-int spi_send_uint8(Spi* p_spi, uint8_t byte);
+void spi_receive_uint8(Spi* p_spi, uint8_t* byte);
+void spi_send_uint8(Spi* p_spi, uint8_t byte);
 
 void spi_close(Spi* p_spi);
 void spi_flush_receiver(Spi* p_spi);
 
-uint32_t spi_slave_send_data(Spi* p_spi, uint8_t *buffer, uint32_t buffer_len);
-uint32_t spi_slave_receive_data(Spi* p_spi, uint8_t *buffer, uint32_t buffer_len);
+//uint32_t spi_slave_send_data(Spi* p_spi, uint8_t *buffer, uint32_t buffer_len);
+//uint32_t spi_slave_receive_data(Spi* p_spi, uint8_t *buffer, uint32_t buffer_len);
 
-uint32_t spi_master_send_data(Spi* p_spi, uint8_t slave_address, uint8_t *buffer, uint32_t buffer_len);
-uint32_t spi_master_receive_data(Spi* p_spi, uint8_t slave_address, uint8_t *buffer, uint32_t buffer_len);
+int spi_master_send_data(Spi* p_spi, uint8_t slave_address, uint8_t *buffer, uint32_t buffer_len);
+int spi_master_receive_data(Spi* p_spi, uint8_t slave_address, uint8_t *buffer, uint32_t buffer_len);
 
 #endif

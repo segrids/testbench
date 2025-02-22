@@ -69,7 +69,7 @@ void utils_toggle_red(void){
 	pio_toggle_output_pins(PIOB, 1<<14);
 }
 
-//__attribute__ ((section(".ramcode")))
+/* blink LED at Due Pin 13 */
 void utils_blink(int times, int delay){
 	Pio* p_pio = PIOB;
 	Rtt* p_rtt = RTT;
@@ -86,4 +86,5 @@ void utils_error(int code){
 	utils_set_red();
 	perror((void *)utils_error, "Error!", code);
 	while(1){}
+	//__asm__("BKPT 0");
 }

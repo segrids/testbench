@@ -28,6 +28,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "slave.h"
 #include "eefc.h"
 #include "blake2s.h"
+#include "rtt.h"
 
 
 /* handle_loader()
@@ -109,6 +110,7 @@ int handle_loader(void) {
 		}
 
 	} else if (apdu.ins == 'E') {
+		rtt_sleep(RTT, 10); // 
 		slave_send_data(apdu.data, apdu.le);
 
 	} else if (apdu.ins == 'F' ) { // flash a page whoose buffer has formerly been writte with 'I' command
@@ -172,6 +174,6 @@ int handle_loader(void) {
 		status = 0x6D00;
 	}
 
-	return slave_send_uint16(status);
+	slave_send_uint16(status);
 }
 
