@@ -92,6 +92,18 @@ class Adapter():
         res, status = self.apdu.sendreceive(cla=b'A', ins=ins, data=slave_address+data)
         assert status == 0x9000
 
+    def sendreceive(self, data, res_len, slave_address=b'', trigger=False):
+        if slave_address == b'':
+            slave_address = self.slave_address
+        assert len(slave_address) == 1
+        if trigger:
+            ins = b'x'
+        else:
+            ins = b'X'
+        res, status = self.apdu.sendreceive(cla=b'A', ins=ins, data=slave_address+data, res_len=res_len)
+        assert status == 0x9000
+        return res
+		
 
 """
 test_adapter()

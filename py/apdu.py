@@ -29,7 +29,7 @@ from .hexen import *
 
 
 class Timeout(Exception):
-    pass
+	pass
 
 """
 class Apdu()
@@ -38,50 +38,55 @@ Apdu package handler
 """
 class Apdu():
 
-    def __init__(self, serial):
-        self.serial = serial
+	"""
+	serial is an instance of a target specific subclass of 
+	Serial.serial with additional method sendreceive()
+	or an instance of Adapter.
+	"""
+	def __init__(self, serial):
+		self.serial = serial
 
-    def __enter__(self):
-        return self
+	def __enter__(self):
+		return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.disconnect()
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		self.disconnect()
 
-    def connect(self):
-        self.serial.open()
+	def connect(self):
+		self.serial.open()
 
-    def disconnect(self):
-        self.serial.close()
+	def disconnect(self):
+		self.serial.close()
 
-    def clear_buffer(self):
-        self.serial.read_all()
+	def clear_buffer(self):
+		self.serial.read_all()
 
-    def sendreceive(self, ins, data=b'', res_len=0, cla=b'L', read_response=True):
-        """Issue an APDU command.
+	def sendreceive(self, ins, data=b'', res_len=0, cla=b'L', read_response=True):
+		"""Issue an APDU command.
 
-        Args:
-            ins: A single byte (bytes of length 1) specifying the command.
-            data: Optional bytes to be sent as the body of the request. Request
-                body left empty by default.
-            res_len: Optional integer number of bytes expected as the response
-                body (thus excluding the 16-bit status code).
-            read_response: Optional boolean to specify whether to wait for and
-                parse the response or return immediately.
+		Args:
+			ins: A single byte (bytes of length 1) specifying the command.
+			data: Optional bytes to be sent as the body of the request. Request
+				body left empty by default.
+			res_len: Optional integer number of bytes expected as the response
+				body (thus excluding the 16-bit status code).
+			read_response: Optional boolean to specify whether to wait for and
+				parse the response or return immediately.
 
-        Returns:
-            A tuple containing the 16-bit status code and the bytes of the
-            response body or None if `read_response` is false.
-        """
-        cmd = cla + ins + bu16(len(data)) + data + bu16(res_len)
-        # print("sending APDU", cmd) # uncomment for debugging
-        self.serial.write(cmd)
-        sleep(0.001) ### added for adapter class
-        if read_response and res_len is not None:
-            res = self.serial.read(res_len + 2)
-
-            if len(res) != res_len + 2:
-                raise Timeout(
-                    'Received {} bytes in {} seconds but expected {}.'.format(
-                        len(res), self.serial.timeout, res_len + 2))
-            return res[:-2], ub16(res[-2:])
+		Returns:
+			A tuple containing the 16-bit status code and the bytes of the
+			response body or None if `read_response` is false.
+		"""
+		cmd = cla + ins + bu16(len(data)) + data + bu16(res_len)
+		# print("sending APDU", cmd) # uncomment for debugging
+		sleep(0.001) ### added for adapter class
+		if not read_response or res_len is None:
+			self.serial.write(cmd)
+		else:
+			res = self.serial.sendreceive(cmd, res_len + 2)
+			if len(res) != res_len + 2:
+				raise Timeout(
+					'Received {} bytes in {} seconds but expected {}.'.format(
+						len(res), self.serial.timeout, res_len + 2))
+			return res[:-2], ub16(res[-2:])
 

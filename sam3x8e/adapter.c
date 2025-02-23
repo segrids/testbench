@@ -43,6 +43,12 @@ Author: SEGRIDS GmbH <www.segrids.com>
  *	               it to the master interface
  *	'W' (Write):   Send `apdu.data[1:]` to the slave with `slave_address = apdu.data[0]`
  *	'w' (write):   Same as 'W' but additionally set GPIO PIN to trigger scope.
+ *  'X' (sendreceive): Send apdu.data[1:] to the slave with slave_adress = apdu.data[0],
+ *                 receive apdu.le bytes from the slave interface and send them to
+ *                 the master interface. 
+ *	'x' (write):   Same as 'X' but additionally set GPIO PIN to trigger scope after the
+ *                 send part.
+ *  'T' (target reset): pull down and up the "adapter target nreset" GPIO output signal
  */
 int handle_adapter(void) {
 	uint16_t status = 0;
@@ -79,6 +85,23 @@ int handle_adapter(void) {
 		status = master_send_data(slave_address, apdu.data+1, apdu.lc-1);
 		// clear GPIO pin
 		pio_clear_output_pins(PIOC, 1 << 21);
+
+	} else if (apdu.ins == 'X') {
+		uint8_t slave_address = apdu.data[0];
+		status = master_send_data(slave_address, apdu.data+1, apdu.lc-1);
+		uint8_t buffer[apdu.le];
+		status |= (uint16_t)master_receive_data(slave_address, buffer, apdu.le);
+		slave_send_data(buffer, apdu.le);
+
+	} else if (apdu.ins == 'x') {
+		uint8_t slave_address = apdu.data[0];
+		pio_set_output_pins(PIOC, 1 << 21);
+		status = master_send_data(slave_address, apdu.data+1, apdu.lc-1);
+		pio_clear_output_pins(PIOC, 1 << 21);
+		uint8_t buffer[apdu.le];
+		status |= (uint16_t)master_receive_data(slave_address, buffer, apdu.le);
+		slave_send_data(buffer, apdu.le);
+
 	} else {
 		perror((void *)handle_adapter, "Unknown instruction!", apdu.ins);
 		status = 0x6D00;

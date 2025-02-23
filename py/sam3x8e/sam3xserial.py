@@ -55,6 +55,10 @@ class Sam3xSerial(serial.Serial):
 			port = self.port
 		super(Sam3xSerial, self).open()
 
+	def sendreceive(self, data, res_len):
+		super(Sam3xSerial, self).write(data)
+		return super(Sam3xSerial, self).read(res_len)
+
 	def target_reset(self):
 		if not self.is_open:
 			self.open()
