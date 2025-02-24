@@ -67,6 +67,10 @@ class Adapter():
         res, status = self.apdu.sendreceive(cla=b'A', ins=b'C')
         assert status == 0x9000
 
+    def flush(self):
+        res, status = self.apdu.sendreceive(cla=b'A', ins=b'F')
+        assert status == 0x9000
+
     def target_reset(self): 
         res, status = self.apdu.sendreceive(cla=b'A', ins=b'T')
         assert status == 0x9000

@@ -82,11 +82,44 @@ void uart_send_uint8(Uart* p_uart, uint8_t byte) {
  *
  * Send data from memory to UART by peripheral DMA.
  */
-void uart_pdc_transfer(Uart* p_uart, uint8_t * p, uint32_t count) {
-	p_uart->UART_TPR = (uint32_t) p;
-	p_uart->UART_TCR = count;
-	p_uart->UART_PTCR = 0x100;
-	p_uart->UART_IER = 0x2;
+void uart_pdc_send(Uart* p_uart, uint8_t * p, uint32_t count) {
+	p_uart->UART_TPR = (uint32_t) p; // transmit pointer
+	p_uart->UART_TCR = count;        // transmit counter
+	p_uart->UART_PTCR = 0x100;       // transmit enable
+	/* "The TXRDY bit triggers the PDC channel data transfer of the transmitter.
+	    This results in a write of data in UART_THR."   */
+	p_uart->UART_IER = 0x2;          // set TXRDY
 }
 
+/* uart_pdc_receive_enable()
+ *
+ * Send data from UART to memory by peripheral DMA.
+ */
+void uart_pdc_receive_enable(Uart* p_uart, uint8_t * p, uint32_t count) {
+	p_uart->UART_RPR = (uint32_t) p;  // receive pointer
+	p_uart->UART_RCR = count;         // receive counter
+	p_uart->UART_PTCR = 0x1;          // receive enable
+	/* "The RXRDY bit triggers the PDC channel data transfer of the receiver. 
+        This results in a read of the data in UART_RHR." */
+	p_uart->UART_IER = 0x1;           // set RXRDY
+}
 
+/* uart_pdc_receive_finish()
+ *
+ * Wait until the PDC receive is complete.
+ */
+void uart_pdc_receive_finish(Uart* p_uart){
+	while ( (p_uart->UART_SR & (1<<3)) == 0 ){} // poll ENDRX flag
+}
+
+void uart_pdc_sendreceive(Uart* p_uart, uint8_t *data, int send_len, 
+                                        uint8_t *buffer, int receive_len){
+	p_uart->UART_TPR = (uint32_t) data;    // transmit pointer
+	p_uart->UART_TCR = send_len;           // transmit counter
+	p_uart->UART_RPR = (uint32_t) buffer;  // receive pointer
+	p_uart->UART_RCR = receive_len;        // receive counter
+	p_uart->UART_PTCR = 0x101;             // transmit and receive enable
+	/* Trigger RX and TX */
+	p_uart->UART_IER = 0x3;                // set RXRDY and TXRDY
+	while ( (p_uart->UART_SR & (1<<3)) == 0 ){} // poll ENDRX flag
+}

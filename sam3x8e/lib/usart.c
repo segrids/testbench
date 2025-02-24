@@ -112,3 +112,17 @@ int usart_master_receive_data(Usart *p_usart, uint8_t slave_address, uint8_t *bu
 }
 
 
+void usart_pdc_sendreceive(Usart* p_usart, uint8_t dummy_address,
+                uint8_t *data, int send_len, uint8_t *buffer, int res_len){
+	p_usart->USART_TPR = (uint32_t) data;    // transmit pointer
+	p_usart->USART_TCR = send_len;           // transmit counter
+	p_usart->USART_RPR = (uint32_t) buffer;  // receive pointer
+	p_usart->USART_RCR = res_len;            // receive counter
+	p_usart->USART_PTCR = 0x101;             // transmit and receive enable
+	/* Trigger RX and TX */
+	p_usart->USART_IER = 0x3;                // set RXRDY and TXRDY
+	while ( (p_usart->USART_CSR & (1<<3)) == 0 ){} // poll ENDRX flag
+	p_usart->USART_PTCR = 0x202;             // transmit and receive disable
+}
+
+

@@ -9,7 +9,7 @@ typedef struct {
   volatile uint32_t RSTC_MR;
 } Rstc;
 
-#define RTSTC ((Rstc *)0x400E1A00)
+#define RSTC ((Rstc *)0x400E1A00)
 
 
 void rstc_reset(Rstc* p_rstc, uint8_t mask);

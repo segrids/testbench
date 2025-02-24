@@ -26,7 +26,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "rstc.h"
 
 
-/* rstc_resetuint()
+/* rstc_reset()
  * 
  * reset one or more HW modules according to bitmask.
  *
@@ -34,7 +34,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
  * bit 2: reset peripherals
  * bit 3: assert NRST pin
  */
-void rstc_resetuint(Rstc* p_rstc, uint8_t mask){
+void rstc_reset(Rstc* p_rstc, uint8_t mask){
 	p_rstc->RSTC_CR = (uint32_t)0xA5 << 24 | mask;
 }
 
