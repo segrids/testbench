@@ -27,6 +27,7 @@ void twi_set_slave_mode(Twi* p_twi, uint8_t slave_address);
 void twi_receive_uint8(void* pointer, uint8_t* byte);
 void twi_send_uint8(void* pointer, uint8_t byte);
 void twi_close(void* pointer);
+void twi_flush(void* pointer);
 int twi_set_master_mode(Twi* p_twi, uint8_t config);
 int twi_master_send_data(Twi* p_twi, uint8_t slave_address, uint8_t* data, int length);
 int twi_master_receive_data(Twi* p_twi, uint8_t slave_address, uint8_t* data, int length);

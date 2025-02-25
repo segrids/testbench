@@ -117,8 +117,8 @@ int master_receive_data(uint8_t slave_address, int len){
                                          master_interface.receive_buffer, len);
 }
 
-int master_sendreceive(uint8_t slave_address, uint8_t *data, int length, int res_len){
-	return master_interface.sendreceive(master_interface.pointer, slave_address,
+void master_sendreceive(uint8_t slave_address, uint8_t *data, int length, int res_len){
+	master_interface.sendreceive(master_interface.pointer, slave_address,
                                         data, length, master_interface.receive_buffer, res_len);
 }
 /* master_close() */

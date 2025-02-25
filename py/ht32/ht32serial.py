@@ -49,6 +49,10 @@ class Ht32Serial(serial.Serial):
 		self.open(port)
 
 	def open(self, port=''):
+		"""
+		Obsolete: Now, I use Ht32 only at the USART of Adapter.
+		The Adapter has the target_reset method.
+		"""
 		self.setDTR(0) # pull up nRST
 		if port == '':
 			port = self.port

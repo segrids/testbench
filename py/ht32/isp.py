@@ -48,12 +48,12 @@ class ISP():
 			serial: A Serial instance connected to the target device.
 		"""
 		if isinstance(serial_or_port, str):
-			self.serial = Ht32Serial(serial_or_port)
+			self.serial = Ht32Serial(serial_or_port) # obsolete
 		else:
 			self.serial = serial_or_port
-		self.serial.baudrate = 115200
-		self.serial.exclusive = False # only one instance can be exclusive
-		self.serial.timeout = 2
+		#self.serial.baudrate = 115200
+		#self.serial.exclusive = False # only one instance can be exclusive
+		#self.serial.timeout = 10
 
 
 	def info(self):
@@ -62,8 +62,8 @@ class ISP():
 		Returns:
 			A named tuple containing the parsed information.
 		"""
-		self.serial.write(_make_command(0x03))
-		return _parse_info(self.serial.read(21))
+		res = self.serial.sendreceive(data=_make_command(0x03), res_len=21)
+		return _parse_info(res)
 
 	def read(self, addr, size):
 		"""Read a block of the target's memory.
@@ -83,9 +83,8 @@ class ISP():
 		Args:
 			addr: The integer address from where to read.
 		"""
-		self.serial.write(_make_command(0x01, 0x02, addr, addr + 63))
-		res = self.serial.read(65)
-		# assert self.serial.read(1) == ord('O')
+		request = _make_command(0x01, 0x02, addr, addr + 63)
+		res = self.serial.sendreceive(data=request, res_len=65)
 		assert res[-1] == ord('O')
 		return res[:-1]
 
@@ -107,20 +106,23 @@ class ISP():
 			data: The bytes of data with a length less than or equal to 52.
 		"""
 		assert len(data) <= 52
-		self.serial.write(_make_command(0x01, 0x01, addr, addr + len(data) - 1, payload=data))
-		assert self.serial.read(1) == b'O'
+		request = _make_command(0x01, 0x01, addr, addr + len(data) - 1, payload=data)
+		res = self.serial.sendreceive(data=request, res_len=1)
+		assert res == b'O'
 
 	def erase(self):
 		"""Erase the targets flash memory."""
-		self.serial.write(_make_command(0x00, 0x0a))
-		assert self.serial.read(1) == b'O'
+		request = _make_command(0x00, 0x0a)
+		res = self.serial.sendreceive(data=request, res_len=1)
+		assert res == b'O'
 
 	def page_erase(self, start_addr, end_addr):
 		"""Erase pages (a 512 bytes) of the targets flash memory.
 		   The end_addr will be rounded up to a multi page offset.
 		"""
-		self.serial.write(_make_command(0x00, 0x08, start_addr=start_addr, end_addr=end_addr))
-		assert self.serial.read(1) == b'O'
+		request = _make_command(0x00, 0x08, start_addr=start_addr, end_addr=end_addr)
+		res = self.serial.sendreceive(data=request, res_len=1)
+		assert res == b'O'
 
 
 	def reset(self, iap=False):

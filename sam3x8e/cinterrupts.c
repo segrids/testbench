@@ -30,6 +30,7 @@ SOFTWARE.
 #include "utils.h"
 #include "slave.h"
 #include "apdu.h"
+#include "adapter.h"
 
 
 /*
@@ -87,9 +88,5 @@ void UsageFault_Handler(void) {
 
 void SysTick_Handler(void){
 	utils_toggle_led();
-	for (int i=0; i<apdu.le; i++){
-		slave_send_uint8(0);   // to avoid testbench hanging
-	}
-	slave_send_uint16(0x5451); // Error code 
-	Reset_Handler();
+	adapter_timeout_handler();
 }

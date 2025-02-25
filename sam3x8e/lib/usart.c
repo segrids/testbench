@@ -73,7 +73,8 @@ void usart_configure(Usart* p_usart, uint32_t mck, uint32_t baud_rate) {
 	pio_select_peripheral_A(PIOA, 0xf << 12);
 	uint16_t cd = mck / (baud_rate * 16);
 	p_usart->USART_BRGR = cd;
-	p_usart->USART_MR = 0xC0; // bit (6,7) = (1,1) => CHRL=3 => char len is 8 bit
+	p_usart->USART_MR = 0x8C0; // bit (6,7) = (1,1) => CHRL=3 => char len is 8 bit
+                              //  bit (11,10,9) = (1,0,0) => no parity
 	p_usart->USART_CR = 0x50;  // set TXEN and RXEN
 }
 

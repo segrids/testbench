@@ -56,11 +56,12 @@ int handle_adapter(void) {
 	uint16_t status = 0;
 	// since the adapter also shall serve as debugger, use the systick
 	// as a watchdog timer. The systick interrupt will restart the apdu loop.
-	systick_enable(SYSTICK, 1024*1024, 1, 1); //systick with interrupt clocked with MCK/8
+	systick_enable(SYSTICK, 8*1024*1024, 1, 1); //systick with interrupt clocked with MCK/8
 	if (apdu.ins == 'O') {
 		uint8_t protocol = apdu.data[0]; // in {'U', 'V', 'I', 'S', 'H'}
 		uint8_t config = apdu.data[1];
 		status = (uint16_t)master_init(protocol, config);
+		pio_set_output_pins(PIOC, 1 << 25); // release nRST line (Due Pin 5)
 
 	} else if (apdu.ins == 'C') {
 		master_close();
@@ -74,9 +75,9 @@ int handle_adapter(void) {
 		slave_send_data(master_interface.receive_buffer, apdu.le);
 
 	} else if (apdu.ins == 'T') {
-		pio_clear_output_pins(PIOC, 1 << 25);
+		pio_clear_output_pins(PIOC, 1 << 25); // Pull down nRST line
 		rtt_sleep(RTT, 50); // sleep 50ms
-		pio_set_output_pins(PIOC, 1 << 25);
+		pio_set_output_pins(PIOC, 1 << 25); // release nRST line
 
 	} else if (apdu.ins == 'W') {
 		uint8_t slave_address = apdu.data[0];
@@ -92,9 +93,13 @@ int handle_adapter(void) {
 
 	} else if (apdu.ins == 'X') {
 		uint8_t slave_address = apdu.data[0];
-		status = master_sendreceive(slave_address, apdu.data+1, apdu.lc-1, apdu.le);
+		uint8_t *request = apdu.data + 1;
+		uint16_t req_len = apdu.lc-1;
+		/* master_sendreceive will not return a return code. If it fails, it'll
+           typically cause a Systick interrupt calling the adapter_timeout_handler()
+           and triggering a processor reset. */
+		master_sendreceive(slave_address, request, req_len, apdu.le);
 		slave_send_data(master_interface.receive_buffer, apdu.le);
-		return 0; //
 
 	} else if (apdu.ins == 'x') {
 		uint8_t slave_address = apdu.data[0];
