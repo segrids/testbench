@@ -28,18 +28,16 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 #include "systick.h"
 
 /* systick_enable() */
-int systick_enable(Systick* p_systick, uint32_t period, uint32_t enable_interrupt, uint32_t div8){
-	if (period < 1){
-		return -1;
-	}
+void systick_enable(Systick* p_systick, uint32_t period, uint32_t enable_interrupt, uint32_t div8){
 	p_systick->LOAD = (period-1) & 0xffffff;
 	p_systick->CTRL = ((~div8 & 1) << 2) | ((enable_interrupt & 1) << 1) | 1;
-	return 0;
 }
 
 /* systick_disable() */
 void systick_disable(Systick* p_systick){
-	p_systick->CTRL = p_systick->CTRL & ~1;
+	//p_systick->CTRL = p_systick->CTRL & ~1;
+	p_systick->VAL = 0; //
+	p_systick->CTRL = 0;
 }
 
 /* systick_get_value() */

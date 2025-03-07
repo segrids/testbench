@@ -4,25 +4,33 @@ PREFIX ?= arm-none-eabi
 
 export AR = $(PREFIX)-ar
 export CC = $(PREFIX)-gcc
+export LD = $(PREFIX)-ld
 export OBJCOPY = $(PREFIX)-objcopy
 
+LIBDIR := $(shell pwd)/lib
+override CFLAGS += -I$(LIBDIR)
+
 override CFLAGS += -mcpu=cortex-m0plus
-# override CFLAGS += -nostdlib ### nur für libtinycrypto
+override CFLAGS += -nostdlib
 override CFLAGS += -mthumb
-override CFLAGS += -Wall -Wno-main -O0 -gdwarf
+override CFLAGS += -Wall -Wno-main -O0 -gdwarf -Wall -Wextra -pedantic-errors
 # override CFLAGS += -fdata-sections -ffunction-sections
 
-TINYCRYPTOLIBDIR := $(shell pwd)/libtinycrypt
-override CFLAGS += -I$(TINYCRYPTOLIBDIR)/include/tinycrypt/
-override LDFLAGS += -L$(TINYCRYPTOLIBDIR)
+override LDFLAGS += -L$(LIBDIR) -gdwarf -Wl,--gc-sections 
+#-Wall -Wextra -pedantic-errors
 
-# override LDFLAGS += -nostdlib 
-override LDFLAGS += --entry=ivt -gdwarf
+#TINYCRYPTOLIBDIR := $(shell pwd)/libtinycrypt
+#override CFLAGS += -I$(TINYCRYPTOLIBDIR)/include/tinycrypt/
+#override LDFLAGS += -L$(TINYCRYPTOLIBDIR)
+
+override LDFLAGS += -nostdlib 
+override LDFLAGS += -nostartfiles
 
 export CFLAGS
 export LDFLAGS
 
-objects := ivt.o ckcu.o usart.o apdu.o main.o gpio.o crc.o pdma.o i2c.o interface.o crypthandler.o
+#objects := ivt.o ckcu.o usart.o apdu.o main.o gpio.o crc.o pdma.o i2c.o interface.o
+objects := ivt.o main.o
 
 %.o : %.S
 	$(CC) $(CFLAGS) -c $^ -o $@
@@ -30,13 +38,26 @@ objects := ivt.o ckcu.o usart.o apdu.o main.o gpio.o crc.o pdma.o i2c.o interfac
 %.bin : %.elf
 	$(OBJCOPY) -O binary $< $@
 
-flash.elf : $(objects)
-	$(CC) $(LDFLAGS) -Tlinker-script.ld $(filter %.o, $^) -ltinycrypt -o $@
+
+.PHONY: libflash
+libflash :
+	cd ./lib && $(MAKE) libflash.a
+
+.PHONY: lib-%
+lib-% :
+	$(MAKE) -C lib $(@:lib-%=%)
+
+
+flash.elf : $(objects) libflash
+	$(LD) $(LDFLAGS) -T./linker-script-flash.ld $(filter %.o, $^) -lflash -o $@
 
 #python3 flash.py --port=ttyUSB0 ht32/flash.bin
 .PHONY: flash
 flash : flash.bin
-	python3 flash.py flash.bin --port=$(PORT)
+	python3 flash.py flash.bin --adapter=$(ADAPTER)
+
+
+#######
 
 .PHONY : modules-%
 modules-% : override CFLAGS += -I$(shell pwd)

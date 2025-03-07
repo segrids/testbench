@@ -84,7 +84,7 @@ int master_init(uint8_t protocol, uint8_t config){
 		master_interface.pointer = (void *)USART1;
 		master_interface.send_data = (int (*)(void *, uint8_t, uint8_t *, int)) &usart_master_send_data;
 		master_interface.receive_data = (int (*)(void *, uint8_t, uint8_t *, int)) &usart_master_receive_data;
-		master_interface.sendreceive = (int (*)(void *, uint8_t, uint8_t *, int, 
+		master_interface.sendreceive = (void (*)(void *, uint8_t, uint8_t *, int, 
                                                 uint8_t*, int)) &usart_pdc_sendreceive;
 		master_interface.close = (void (*)(void *)) &usart_close;
 		master_interface.flush = (void (*)(void *)) &usart_flush;

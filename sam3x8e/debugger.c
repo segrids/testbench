@@ -124,6 +124,7 @@ int handle_swd(void) {
 		status = 0x6D00;
 	}
 
-	return slave_send_uint16(status);
+	slave_send_uint16(status);
+	return 0;
 }
 

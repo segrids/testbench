@@ -33,7 +33,7 @@ SECTIONS
 		*(.data);
 		. = ALIGN(4);
 		_erelocate = .;
-    } > ram  AT> flash
+    } > ram  AT > flash
 
 	_etext = LOADADDR(.data);
 

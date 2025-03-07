@@ -6,6 +6,7 @@ OUTPUT_ARCH(arm)
    like -L . */
 SEARCH_DIR(.)
 
+
 /* Memory Spaces Definitions */
 MEMORY
 {
@@ -13,11 +14,12 @@ MEMORY
 	ram (rwx)   : ORIGIN = 0x20000000, LENGTH = 0x00004000 /* sram, 16K */
 }
 
-/* Section Definitions */
+/* SECTIONS specifies how input sections are mapped to output sections  */
 SECTIONS
 {
     .text :
     {
+        /*KEEP(*(.vectors))*/
         KEEP(*(.vectors))
         *(.text)
         *(.rodata)
@@ -32,7 +34,7 @@ SECTIONS
 		*(.data);
 		. = ALIGN(4);
 		_erelocate = .;
-    } > ram AT> flash
+    } > ram  AT> flash
 
 	_etext = LOADADDR(.data);
 

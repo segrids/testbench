@@ -178,7 +178,7 @@ int select_slave(void) {
  *
  * Evaluate the CLA byte of a received APDU (application protocol data unit) and call the suitable command handler.
  */
-int handle_apdu(void) {
+void handle_apdu(void) {
 	if (apdu.lc > 260){
 		slave_send_uint16(0x6700);
 #ifndef BOOTLOADER

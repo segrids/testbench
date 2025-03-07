@@ -3,6 +3,7 @@ PREFIX ?= arm-none-eabi
 
 export AR = $(PREFIX)-ar
 export CC = $(PREFIX)-gcc
+export LD = $(PREFIX)-ld
 export OBJCOPY = $(PREFIX)-objcopy
 
 LIBDIR := $(shell pwd)/lib
@@ -14,7 +15,7 @@ override CFLAGS += -mcpu=cortex-m3
 override CFLAGS += -Wall -Wno-main -O0 -gdwarf -mthumb
 #override CFLAGS += -fdata-sections -ffunction-sections
 
-override LDFLAGS += --entry=ivt -L$(LIBDIR) -gdwarf -Wl,--gc-sections
+override LDFLAGS += -L$(LIBDIR) -gdwarf -Wl,--gc-sections
 #override LDFLAGS += -nostdlib
 
 ### tinycrypt requires stdlib
@@ -55,7 +56,7 @@ libram :
 	cd ./lib && $(MAKE) libram.a
 
 flash.elf : $(objects) $(cond_objects) $(optional_objects) libflash
-	$(CC) $(LDFLAGS) -T./ld/linker-script-flash.ld $(filter %.o, $^) -lflash -ltinycrypt -o $@
+	$(LD) $(LDFLAGS) -T./ld/linker-script-flash.ld $(filter %.o, $^) -lflash -ltinycrypt -o $@
 
 
 bootloader.elf : $(objects) $(cond_objects:%.o=%.bootloader.o) libram

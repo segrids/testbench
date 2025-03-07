@@ -82,7 +82,7 @@ int apdu_receive(void) {
  *
  * APDU receive and execute in a loop.
  */
-void apdu_loop(int (*handle)(void)) {
+void apdu_loop(void (*handle)(void)) {
 	while (1) {
 		if (apdu_receive() == 0){
 			(*handle)();

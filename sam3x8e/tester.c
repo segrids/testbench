@@ -79,11 +79,11 @@ int handle_test(void) {
 		status = slave_init('I', 0x11, 0);
 
 	} else if (apdu.ins == 'W') {
-		status = slave_send_data(apdu.data, apdu.lc);
+		slave_send_data(apdu.data, apdu.lc);
 
 	} else if (apdu.ins == 'R') {
 		uint8_t buffer[apdu.le];
-		status = slave_receive_data(buffer, apdu.le);
+		slave_receive_data(buffer, apdu.le);
 		slave_send_data(buffer, apdu.le);
 	/* end TWI slave tests */
 
@@ -134,7 +134,7 @@ int handle_test(void) {
 		}
 
 	} else if (apdu.ins == 'T') {
-		uart_pdc_transfer(UART, apdu.data, apdu.le);
+		uart_pdc_send(UART, apdu.data, apdu.le);
 
 	} else if (apdu.ins == 'Y') {  // get sYstick value
 		slave_send_uint32(systick_get_value(SYSTICK));
@@ -146,7 +146,7 @@ int handle_test(void) {
 	if (status == 0) {
 		status = 0x9000;
 	}
-	return slave_send_uint16(status);
+	slave_send_uint16(status);
 }
 
 

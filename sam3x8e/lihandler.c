@@ -197,7 +197,8 @@ int handle_li(void){
 	} else {
 		status = 0x6666; // unknown ins
 	}	
-	return slave_send_uint16(status);
+	slave_send_uint16(status);
+	return 0;
 }
 
 

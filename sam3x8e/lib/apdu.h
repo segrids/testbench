@@ -4,7 +4,7 @@
 #include "types.h"
 
 int apdu_receive(void);
-void apdu_loop(int (*handle)(void));
+void apdu_loop(void (*handle)(void));
 
 /**
 APDU structure.
