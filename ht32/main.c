@@ -52,7 +52,7 @@ Author: Frank Schuhmacher <frank.schuhmacher@segrids.com>
 int handle_apdu(void);
 int handle_responder(void);
 //int handle_swd(void);
-int handle_target(void);
+int handle_loader(void);
 int handle_qwiic(void);
 
 
@@ -87,7 +87,7 @@ void set_led(uint8_t value){
 	} else {
 		gpio_toggle_output_pins(GPIOC, 3 << 14);
 	}
-};
+}
 
 
 
@@ -131,24 +131,27 @@ void main(void){
 int handle_apdu(void) {
 	if (apdu.lc > 260){
 		interface_send_uint16(0x6700);
+	} else if (apdu.cla == 'L') { 
+		return handle_loader();
+#ifdef RESPONDER
 	} else if (apdu.cla == 'R') {
 		return handle_responder();
-	//} else if (apdu.cla == 'S') {
-	//	return handle_swd();
-	} else if (apdu.cla == 'L') { 
-		return handle_target();
+#endif
 #ifdef CRYPT
 	} else if (apdu.cla == 'C') {
 		return handle_crypt();
 #endif
+#ifdef QWIIC
 	} else if (apdu.cla == 'Q') {
 		return handle_qwiic();
+#endif
 	} else {
 		interface_send_uint16(0x6C00);
 	}
 	return 0;
 }
 
+#ifdef RESPONDER
 uint32_t * const PROGRAM_SRC  = (uint32_t *) 0x00010000;
 uint32_t * const PROGRAM_DEST = (uint32_t *) 0x20000000;
 
@@ -199,8 +202,9 @@ int handle_responder(void) {
 	interface_send_uint16(status);
 	return 0;
 }
+#endif
 
-int handle_target(void) {
+int handle_loader(void) {
 	//uint16_t i, value;
 	uint16_t status = 0x9000;
 	if (apdu.ins == 'D' ) { // data write
@@ -268,6 +272,7 @@ int handle_target(void) {
 	return 0;
 }
 
+#ifdef QWIIC
 int handle_qwiic(void) {
 	uint16_t status = 0x9000;
 	if (apdu.ins == 'I' ) {
@@ -302,5 +307,5 @@ int handle_qwiic(void) {
 	interface_send_uint16(status);
 	return 0;
 }
-
+#endif
 

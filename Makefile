@@ -13,7 +13,8 @@ override CFLAGS += -Wall -Wno-main -O0 -gdwarf
 # override CFLAGS += -fdata-sections
 
 # override LDFLAGS += -nostdlib 
-override LDFLAGS += --entry=ivt -L$(LIBDIR) -gdwarf -Wl,--gc-sections 
+override LDFLAGS += --entry=ivt -L$(LIBDIR) 
+#override LDFLAGS += -L$(LIBDIR)
 
 export CFLAGS
 export LDFLAGS

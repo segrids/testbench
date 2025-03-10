@@ -56,7 +56,7 @@ int handle_adapter(void) {
 	uint16_t status = 0;
 	// since the adapter also shall serve as debugger, use the systick
 	// as a watchdog timer. The systick interrupt will restart the apdu loop.
-	systick_enable(SYSTICK, 1024*1024, 1, 1); //systick with interrupt clocked with MCK/8
+	// ----systick_enable(SYSTICK, 0xffffff, 1, 1); //systick with interrupt clocked with MCK/8
 	if (apdu.ins == 'O') {
 		uint8_t protocol = apdu.data[0]; // in {'U', 'V', 'I', 'S', 'H'}
 		uint8_t config = apdu.data[1];
