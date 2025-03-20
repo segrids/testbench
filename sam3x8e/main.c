@@ -79,10 +79,10 @@ Author: SEGRIDS GmbH <www.segrids.com>
  *	28 (C29)|PIO| nSS       | Due Pin 10  | SPI0 master: connect to use board as SPI slave
  *	29 (C26)|PIO| don't use | Due Pin  4  | use C26 instead for Debugger SWD data
  *  PIOB
- *      12      | A | TWD1      | Due Pin 20  | TWI1 master
- *      13      | A | TWCK1     | Due Pin 21  | TWI1 master
- *  	14      |PIO| out       | Due Pin 53  | RED
- *  	25      |   |           | Due Pin 2   |
+ *  12      | A | TWD1      | Due Pin 20  | TWI1 master
+ *  13      | A | TWCK1     | Due Pin 21  | TWI1 master
+ *  14      |PIO| out       | Due Pin 53  | RED
+ *  25      |   |           | Due Pin 2   |
  *	27      |PIO| out       | Due Pin 13  | LED
  *	28      | A | SWCLK     | SWD / JTAG  | SWD
  *	29      | A | TDI       | JTAG        |
@@ -92,19 +92,18 @@ Author: SEGRIDS GmbH <www.segrids.com>
  *	21      |PIO| out       | Due Pin  9  | GPIO test / or as trigger PIN in measurement
  *	22      |PIO| in        | Due Pin  8  | GPIO test
  *	23      |PIO| out       | Due Pin  7  | GPIO test
- *	24      |PIO| in        | Due Pin  6  | GPIO test
- *	25      |PIO| out       | Due Pin  5  | Debugger: reset target and adapter reset
+ *	24      |PIO| out       | Due Pin  6  | Adapter: boot select
+ *	25      |PIO| out       | Due Pin  5  | Debugger and Adapter: nreset target
  *	26 (A29)|PIO|           | Due Pin  4  | Debugger SWD data
- *	27      |   |           |             |
  *	28      |PIO| out       | Due Pin  3  | Debugger: Clock
  *	29 (A28)|PIO| dont use  | Due Pin 10  | use A28 instead for SPIO0 nSS
  *  PIOD
- *  	 4      |   | in        | Due Pin 14  | HDQ Master input: enable pull-up and bridge 
- *  	        |   |           |             | via 50Ohm with Due Pin 15 (HDQ signal line)
- *  	 5      |   | multidrive| Due Pin 15  | HDQ Master multidrive output (never set high, 
- *  	        |   |           |             | only set low or open drain): HDQ signal line
- *  	 7      |   |           | Due Pin 11  |
- *  	 8      |   |           | Due Pin 12  |
+ *   4      |   | in        | Due Pin 14  | HDQ Master input: enable pull-up and bridge 
+ *          |   |           |             | via 50Ohm with Due Pin 15 (HDQ signal line)
+ * 	 5      |   | multidrive| Due Pin 15  | HDQ Master multidrive output (never set high, 
+ * 	        |   |           |             | only set low or open drain): HDQ signal line
+ * 	 7      |   |           | Due Pin 11  |
+ * 	 8      |   |           | Due Pin 12  |
  */
 void init_pio(void) {
 	// PORT A
@@ -117,7 +116,7 @@ void init_pio(void) {
 	pio_select_output_pins(PIOC, 1 << 21);   // Arduino Due pin 9
 	pio_select_input_pins(PIOC, 1 << 22);    // Arduino Due pin 8
 	pio_select_output_pins(PIOC, 1 << 23);   // Arduino Due pin 7
-	pio_select_input_pins(PIOC, 1 << 24);    // Arduino Due pin 6
+	pio_select_output_pins(PIOC, 1 << 24);    // Arduino Due pin 6
 	pio_select_output_pins(PIOC, 1 << 28);   // 1 << 28 Arduino Due pin 4 reserved for debugger
 	pio_select_output_pins(PIOC, 1 << 26);   // 1 << 26 Arduino Due pin 3 reserved for debugger
 	pio_select_output_pins(PIOC, 1 << 25);   // 1 << 25 Arduino Due pin 4 reserved for debugger
@@ -183,19 +182,19 @@ void handle_apdu(void) {
 		slave_send_uint16(0x6700);
 #ifndef BOOTLOADER
 	} else if (apdu.cla == 'A') {
-		return handle_adapter();
+		handle_adapter();
 	} else if (apdu.cla == 'C') {
-		return handle_crypt();
+		handle_crypt();
 	} else if (apdu.cla == 'I') {
-		return handle_li();
+		handle_li();
 #ifdef RESPONDER
 	} else if (apdu.cla == 'R') {
-		return handle_responder();
+		handle_responder();
 #endif
 	} else if (apdu.cla == 'S') {
-		return handle_swd();
+		handle_swd();
 	} else if (apdu.cla == 'T') {
-		return handle_test();
+		handle_test();
 #endif
 	} else if (apdu.cla == 'L') {
 		return handle_loader();
@@ -203,7 +202,6 @@ void handle_apdu(void) {
 	        perror((void *)handle_apdu, "Unknown APDU class", apdu.cla);
 		slave_send_uint16(0x6C00);
 	}
-	return 0;
 }
 
 

@@ -53,5 +53,6 @@ void gpio_select_output_pins(Gpio* gpio, uint32_t pinmask);
 void gpio_set_output_pins(Gpio* gpio, uint32_t pinmask);
 void gpio_clear_output_pins(Gpio* gpio, uint32_t pinmask);
 void gpio_toggle_output_pins(Gpio* gpio, uint32_t pinmask);
-void dummy(void);
+void toggle(void);
+void set_trigger(int port, int value);
 #endif

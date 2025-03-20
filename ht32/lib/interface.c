@@ -40,13 +40,13 @@ int interface_select(void) {
 	gpio_select_input_pins(GPIOC, pin_select);
 
 	if (gpio_read_input_pins(GPIOC) & pin_select) {
-		// Use I2C.
+		// Use I2C if C1=high.
 		interface.pointer = (void *) I2C0;
 		interface.receive_apdu = (int (*)(void *)) &i2c_slave_receive_apdu;
 		interface.send_uint8 = (int (*)(void *, uint8_t)) 0;
 		interface.flush_response = (int (*)(void *, uint8_t *, int)) &i2c_slave_send_apdu_response;
 	} else {
-		// Use USART.
+		// Use USART if C1=low.
 		interface.pointer = (void *) USART1;
 		interface.receive_apdu = (int (*)(void *)) &usart_receive_apdu;
 		interface.send_uint8 = (int (*)(void *, uint8_t)) &usart_send_uint8;

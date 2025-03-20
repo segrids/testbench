@@ -38,9 +38,10 @@ if __name__ == '__main__':
 	print('Selected image:', args.image)
 	# Open the Adapter
 	s = py.Sam3xSerial(args.adapter)
+	s.timeout = 2
 	# Programming only works over the UART interface
-	a = py.adapter.Adapter(s, interface="USART")
-
+	time.sleep(0.3)
+	a = py.adapter.Adapter(s, interface="USART", boot="rom")
 	with open(args.image, 'rb') as f:
 		binary = f.read()
 	isp = ISP(a)
@@ -51,4 +52,5 @@ if __name__ == '__main__':
 	time.sleep(0.3)
 	isp.flash(0x00, binary)
 	isp.reset()
+	a.boot_select(1)
 

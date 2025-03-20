@@ -89,28 +89,101 @@ void set_led(uint8_t value){
 	}
 }
 
+/* Fixed Pin configuration for the ESK32-30501 V2.0 Starter Kit
 
+- USART1 Slave
+- I2C Slave
+- I2C Master
+- SPI Slave
+
+
+See Datasheet Page 29 (of 50):
+
+ Board Pin        | HT32 Pin  | AF | Usage
+ ---------------- | --------- | -- | -----------------
+ A0               | PA0  (1)  | 7  | I2C1 SCL - I2C Master (QWIIC)
+ A1               | PA1  (2)  | 7  | I2C1 SDA - I2C Master (QWIIC)
+ A2               | PA2  (3)  |    | Trigger Out 0
+ A3               | PA3  (4)  |    | Trigger Out 1
+ A4               | PA4  (5)  | 6  | USART1 RX
+ A5 / J2 RS232_Tx |           |    |           (USART1 TX if jumper J2 is inserted)
+ J2-PA5           | PA5  (6)  | 6  | USART1 TX (or jumper)
+ A6               | PA6  (7)  |    | 
+ A7               | PA7  (8)  |    | 
+ A8               | PA8  (34) |    | 
+ A9               | PA9  (35) |    | Boot Select 0=ISP, 1=Flash 
+ A10              | PA10 (36) |    | 
+ A11              | PA11 (37) |    | 
+ SWCLK            | PA12 (38) |    | SWD Debug CLK
+ SWDIO            | PA13 (39) |    | SWD Debug IO 
+ A14              | PA14 (40) |    | 
+ A15              | PA15 (41) |    | 
+ ---------------- | --------- | -- | -----------------
+ B0               | PB0  (44) |    | 
+ B1               | PB1  (45) |    | 
+ B2               | PB2  (49) |    | 
+ B3               | PB3  (50) |    | 
+ B4               | PB4  (51) |    | 
+ B5               | PB5  (52) |    | 
+ B6               | PB6  (60) |    | 
+ B7               | PB7  (61) |    | 
+ B8               | PB8  (62) |    | 
+ XX               | XXXX (XX) |    | 
+ B10              | PB10 (22) |    | 32768 Hz Quarz X1
+ B11              | PB11 (23) |    | 32768 Hz Quarz X1
+ B12              | PB12 (24) |    | RTC OUT 
+ B13              | PB13 (26) |    | 8 MHz Quarz Y2
+ B14              | PB14 (27) |    | 8 MHz Quarz Y2
+ B15              | PB15 (28) |    | 
+ ---------------- | --------- | -- | -----------------
+ C0               | PC0  (29) |    | GPIO Output
+ C1               | PC1  (57) |    | Slave Select 0=USART, 1=I2C (ohne Jumper)
+ C2               | PC2  (58) |    | 
+ C3               | PC3  (59) |    | 
+ C4               | PC4  (11) |    | 
+ C5               | PC5  (12) |    | 
+ C6               | PC6  (15) |    | USBDM 
+ C7               | PC7  (16) |    | USBDP
+ C8               | PC8  (13) |    | 
+ C9               | PC9  (14) |    | 
+ C10              | PC10 (30) |    | 
+ C11              | PC11 (31) |    | 
+ C12              | PC12 (32) | 7  | I2C0 SCL  - I2C Slave
+ C13              | PC13 (33) | 7  | I2C0 SDA  - I2C Slave
+ C14              | PC14 (53) |    | LEDs D7-D9
+ C15              | PC15 (54) |    | LEDs D7-D9
+ ---------------- | --------- | -- | -----------------
+ D0               | PD0 (25)  |    | 
+ D1               | PD1 (46)  |    | 
+ D2               | PD2 (47)  |    | 
+ D3               | PD3 (48)  |    | 
+*/
 
 void main(void){
 	ckcu_configure();
 
-	/* ------------ AFIO Configuration ----------------------- */
+	/* ------------ AFIO Configuration ----------------------- 
+        See Table 22 on page 177 (of 656) of User Manual
+        and Table 3  on page 27 (of 50) of Datasheet.
+    */
+	
 	// PA7->AF0
 	// PA6->AF0
 	// PA5->AF6 (USART1)
 	// PA4->AF6 (USART1)
-	// PA3->AF0
-	// PA2->AF0
+	// PA3->AF1 (PA3)
+	// PA2->AF1 (PA2)
 	// PA1->AF7 (I2C1 - SDA)
 	// PA0->AF7 (I2C1 - SCL)
-	*GPACFGLR = 0x66 << 16;
-	*GPACFGLR |= 0x77 << 0;
+	*GPACFGLR = 0x660077 << 0;
 	// PC13->AF7 (I2C0 - SDA)
 	// PC12->AF7 (I2C0 - SCL)
 	*GPCCFGHR = 0x77 << 16;
 
 	/* ------------ GPIO Configuration------------------------ */
-	gpio_select_output_pins(GPIOC, 1 << 0); // configure PC0 as output pin
+	gpio_select_output_pins(GPIOA, 3 << 2);  // configure PA2-PA3 as output pin 
+	gpio_select_output_pins(GPIOC, 1 << 0);  // configure PC0 as output pin 
+	gpio_select_input_pins(GPIOC, 1 << 1);   // configure PC1 as input pin 
 	gpio_select_output_pins(GPIOC, 3 << 14); // configure PC14-15 as output pins 
 
 	/* ------------ USART1 Configuration------------------------ */
@@ -258,7 +331,7 @@ int handle_loader(void) {
 		uint8_t value = *apdu.data;
 		set_led(value);
 
-	} else if (apdu.ins == 'c') {
+	} else if (apdu.ins == 'c') { // CRC test
 		uint32_t address = *(uint32_t *) apdu.data;
 		uint32_t length = *((uint32_t *) apdu.data + 1);
 

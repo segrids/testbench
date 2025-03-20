@@ -50,6 +50,21 @@ void gpio_toggle_output_pins(Gpio* gpio, uint32_t pinmask) {
 	gpio->DOUTR ^= pinmask;
 }
 
-void dummy(void){
+void toggle(void){
 	gpio_toggle_output_pins(GPIOC, 1 << 0); // toggle PC0
+}
+
+/*
+ port | Starter Kit pin
+ ---- | ---------------
+ 0    | A2
+ 1    | A3
+*/
+void set_trigger(int port, int value){
+	uint32_t pinmask = 1 << (2 + port);
+	if (value == 1){
+		gpio_set_output_pins(GPIOA, pinmask);
+	} else {
+		gpio_clear_output_pins(GPIOA, pinmask);
+	}
 }

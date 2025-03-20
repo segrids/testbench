@@ -23,6 +23,7 @@ SOFTWARE.
 Author: Frank Schuhmacher
 """
 
+from time import sleep
 from .apdu import Apdu
 from .hexen import *
 
@@ -43,70 +44,88 @@ alternatively to a Serial object.
 """
 class Adapter():
 
-    def __init__(self, *args, interface="I2C", slave_address=0x11, config=4, **kwargs):
-        """Initiate Debugger and configure target's debug port.
+	def __init__(self, *args, interface="I2C", slave_address=0x11, 
+                              config=4, boot="flash", **kwargs):
+		"""Initiate Debugger and configure target's debug port.
 
-        Args:
-            interface: master interface of the adapter connected to the end target
-            slave_address: slave address or slave select line of the end target if applicable
-            config: configuration of the master interface of the adapter
-            *args, **kwargs: passed to base class `Target`.
-        """
-        self.apdu = Apdu(*args, **kwargs)
-        self.protocol = protocols[interface]
-        self.slave_address = bu8(slave_address)
-        self.config = bu8(config)
-        self.mcu = None # not neccessary since Adapter has mcu agnostic target_reset method
-        self.open()
+		Args:
+			interface: master interface of the adapter connected to the end target
+			slave_address: slave address or slave select line of the end target if applicable
+			config: configuration of the master interface of the adapter
+			*args, **kwargs: passed to base class `Target`.
+		"""
+		self.apdu = Apdu(*args, **kwargs)
+		self.protocol = protocols[interface]
+		self.slave_address = bu8(slave_address)
+		self.config = bu8(config)
+		if boot == "rom":
+			self.boot_select(0)
+		else:
+			self.boot_select(1)
+		self.target_reset() # bring the target to a defined state
+		sleep(0.3)
+		#self.mcu = None # not neccessary since Adapter has mcu agnostic target_reset method
+		self.open()
 
-    def open(self):
-        res, status = self.apdu.sendreceive(cla=b'A', ins=b'O', data=self.protocol+self.config)
-        assert status == 0x9000
+	def open(self):
+		res, status = self.apdu.sendreceive(cla=b'A', ins=b'O', data=self.protocol+self.config)
+		assert status == 0x9000
 
-    def close(self):
-        res, status = self.apdu.sendreceive(cla=b'A', ins=b'C')
-        assert status == 0x9000
+	def close(self):
+		res, status = self.apdu.sendreceive(cla=b'A', ins=b'C')
+		assert status == 0x9000
 
-    def flush(self):
-        res, status = self.apdu.sendreceive(cla=b'A', ins=b'F')
-        assert status == 0x9000
+	def flush(self):
+		res, status = self.apdu.sendreceive(cla=b'A', ins=b'F')
+		assert status == 0x9000
 
-    def target_reset(self): 
-        res, status = self.apdu.sendreceive(cla=b'A', ins=b'T')
-        assert status == 0x9000
+	""" boot_select sets the Arduino Due pin 6 to value.
+		If the adapter is used for the HT32, this pin is connected to 
+		the "boot selcect" pin A9 of the HT32 Starter Kit.
+	"""
+	def boot_select(self, value=1):
+		res, status = self.apdu.sendreceive(cla=b'A', ins=b'S', data=bu8(value))
+		assert status == 0x9000
 
-    def self_reset(self):
-        self.apdu.serial.target_reset()
+	""" target_reset will pull down the Arduino Due pin 5 connected to
+		an NRST pin of the target. 
+	"""
+	def target_reset(self): 
+		res, status = self.apdu.sendreceive(cla=b'A', ins=b'T')
+		assert status == 0x9000
 
-    def read(self, length, slave_address=b''):
-        if slave_address == b'':
-            slave_address = self.slave_address
-        res, status = self.apdu.sendreceive(cla=b'A', ins=b'R', data=slave_address, res_len=length)
-        assert status == 0x9000
-        return res
+	def self_reset(self):
+		self.apdu.serial.target_reset()
 
-    def write(self, data, slave_address=b'', trigger=False):
-        if slave_address == b'':
-            slave_address = self.slave_address
-        assert len(slave_address) == 1
-        if trigger:
-            ins = b'w'
-        else:
-            ins = b'W'
-        res, status = self.apdu.sendreceive(cla=b'A', ins=ins, data=slave_address+data)
-        assert status == 0x9000
+	def read(self, length, slave_address=b''):
+		if slave_address == b'':
+			slave_address = self.slave_address
+		res, status = self.apdu.sendreceive(cla=b'A', ins=b'R', data=slave_address, res_len=length)
+		assert status == 0x9000
+		return res
 
-    def sendreceive(self, data, res_len, slave_address=b'', trigger=False):
-        if slave_address == b'':
-            slave_address = self.slave_address
-        assert len(slave_address) == 1
-        if trigger:
-            ins = b'x'
-        else:
-            ins = b'X'
-        res, status = self.apdu.sendreceive(cla=b'A', ins=ins, data=slave_address+data, res_len=res_len)
-        assert status == 0x9000
-        return res
+	def write(self, data, slave_address=b'', trigger=False):
+		if slave_address == b'':
+			slave_address = self.slave_address
+		assert len(slave_address) == 1
+		if trigger:
+			ins = b'w'
+		else:
+			ins = b'W'
+		res, status = self.apdu.sendreceive(cla=b'A', ins=ins, data=slave_address+data)
+		assert status == 0x9000
+
+	def sendreceive(self, data, res_len, slave_address=b'', trigger=False):
+		if slave_address == b'':
+			slave_address = self.slave_address
+		assert len(slave_address) == 1
+		if trigger:
+			ins = b'x'
+		else:
+			ins = b'X'
+		res, status = self.apdu.sendreceive(cla=b'A', ins=ins, data=slave_address+data, res_len=res_len)
+		assert status == 0x9000
+		return res
 		
 
 """
@@ -121,10 +140,10 @@ The interface select jumper must be be set properly
 If interface == "SPI", connect arduiono due pin A10 of the target (i.e. the SPI slave) to GND.
 """
 def test_adapter(adapter_port="/dev/ttyACM2", interface="I2C"):
-    from .sam3xserial import Sam3xSerial
-    from .loader import Loader
-    s = Sam3xSerial(adapter_port)
-    a = Adapter(s, interface=interface)
-    t = Loader(a)
-    assert t.echo(b'abc') == b'abc'
+	from .sam3xserial import Sam3xSerial
+	from .loader import Loader
+	s = Sam3xSerial(adapter_port)
+	a = Adapter(s, interface=interface)
+	t = Loader(a)
+	assert t.echo(b'abc') == b'abc'
 

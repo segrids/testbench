@@ -51,6 +51,7 @@ Author: SEGRIDS GmbH <www.segrids.com>
  *	'x' (write):   Same as 'X' but additionally set GPIO PIN to trigger scope after the
  *                 send part.
  *  'T' (target reset): pull down and up the "adapter target nreset" GPIO output signal
+ *  'S' (set / boot select): sets or clears the "adapter target select" GPIO output signal
  */
 int handle_adapter(void) {
 	uint16_t status = 0;
@@ -73,6 +74,14 @@ int handle_adapter(void) {
 		uint8_t slave_address = apdu.data[0];
 		status = (uint16_t)master_receive_data(slave_address, apdu.le);
 		slave_send_data(master_interface.receive_buffer, apdu.le);
+
+	} else if (apdu.ins == 'S') {
+		uint8_t value = apdu.data[0];
+		if (value == 0){
+			pio_clear_output_pins(PIOC, 1 << 24); // Pull down boot select line (select HT32 ISP)
+		} else {
+			pio_set_output_pins(PIOC, 1 << 24); // Pull up boot select line (select HT32 Flash boot)
+		}
 
 	} else if (apdu.ins == 'T') {
 		pio_clear_output_pins(PIOC, 1 << 25); // Pull down nRST line
